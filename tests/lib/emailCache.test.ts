@@ -3,9 +3,9 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-vi.mock('@/lib/integrations/imap', () => ({ fetchBody: vi.fn() }));
+vi.mock('@/lib/integrations/imap', () => ({ fetchBodies: vi.fn() }));
 
-import { fetchBody } from '@/lib/integrations/imap';
+import { fetchBodies } from '@/lib/integrations/imap';
 import type { EmailEnvelope } from '@/lib/types';
 import type { Connection } from '@/lib/vault/connections';
 
@@ -76,7 +76,7 @@ describe('cache de corpos de e-mail', () => {
   it('só busca no IMAP o que ainda não está em cache', async () => {
     const { putCachedBody, warmBodyCache } = await import('@/lib/emailCache');
     putCachedBody('u-1', CONNECTION.id, '1', 'já tenho');
-    vi.mocked(fetchBody).mockResolvedValue('baixado');
+    vi.mocked(fetchBodies).mockResolvedValue([{ uid: '2', mailbox: 'inbox', body: 'baixado' }]);
 
     const fetched = await warmBodyCache('u-1', [CONNECTION], [
       envelope({ id: '1' }),
@@ -84,38 +84,74 @@ describe('cache de corpos de e-mail', () => {
     ]);
 
     expect(fetched).toBe(1);
-    expect(fetchBody).toHaveBeenCalledTimes(1);
     // A caixa vai junto: o mesmo uid existe na entrada e nos enviados.
-    expect(fetchBody).toHaveBeenCalledWith(CONNECTION, '2', 'inbox');
+    expect(fetchBodies).toHaveBeenCalledWith(CONNECTION, [{ uid: '2', mailbox: 'inbox' }]);
   });
 
-  it('um e-mail que falha não interrompe o aquecimento dos outros', async () => {
+  // Uma conexão por mensagem faz o servidor recusar os logins seguintes, e é
+  // isso que derrubava o e-mail no ciclo automático.
+  it('pede todos os corpos que faltam numa chamada só por conta', async () => {
+    const { warmBodyCache } = await import('@/lib/emailCache');
+    const OUTRA: Connection = { ...CONNECTION, id: 'mail-2', label: 'Pessoal' };
+    vi.mocked(fetchBodies).mockResolvedValue([]);
+
+    await warmBodyCache(
+      'u-1',
+      [CONNECTION, OUTRA],
+      [
+        envelope({ id: '1' }),
+        envelope({ id: '2', mailbox: 'sent' }),
+        envelope({ id: '3', account: OUTRA.id }),
+      ],
+    );
+
+    expect(fetchBodies).toHaveBeenCalledTimes(2);
+    expect(fetchBodies).toHaveBeenCalledWith(CONNECTION, [
+      { uid: '1', mailbox: 'inbox' },
+      { uid: '2', mailbox: 'sent' },
+    ]);
+    expect(fetchBodies).toHaveBeenCalledWith(OUTRA, [{ uid: '3', mailbox: 'inbox' }]);
+  });
+
+  it('não passa de 15 corpos por conta em cada ciclo', async () => {
+    const { warmBodyCache } = await import('@/lib/emailCache');
+    vi.mocked(fetchBodies).mockResolvedValue([]);
+
+    const muitos = Array.from({ length: 40 }, (_, i) => envelope({ id: String(i) }));
+    await warmBodyCache('u-1', [CONNECTION], muitos);
+
+    expect(vi.mocked(fetchBodies).mock.calls[0][1]).toHaveLength(15);
+  });
+
+  it('uma caixa que falha não interrompe o aquecimento das outras', async () => {
     const { warmBodyCache, getCachedBody } = await import('@/lib/emailCache');
-    vi.mocked(fetchBody).mockImplementation(async (_conn, id) => {
-      if (id === '1') throw new Error('IMAP caiu');
-      return 'ok';
+    const OUTRA: Connection = { ...CONNECTION, id: 'mail-2', label: 'Pessoal' };
+    vi.mocked(fetchBodies).mockImplementation(async (conn) => {
+      if (conn.id === CONNECTION.id) throw new Error('IMAP caiu');
+      return [{ uid: '2', mailbox: 'inbox' as const, body: 'ok' }];
     });
 
-    const fetched = await warmBodyCache('u-1', [CONNECTION], [
-      envelope({ id: '1' }),
-      envelope({ id: '2' }),
-    ]);
+    const fetched = await warmBodyCache(
+      'u-1',
+      [CONNECTION, OUTRA],
+      [envelope({ id: '1' }), envelope({ id: '2', account: OUTRA.id })],
+    );
 
     expect(fetched).toBe(1);
     expect(getCachedBody('u-1', CONNECTION.id, '1')).toBeNull();
-    expect(getCachedBody('u-1', CONNECTION.id, '2')).toBe('ok');
+    expect(getCachedBody('u-1', OUTRA.id, '2')).toBe('ok');
   });
 
   // O envelope aponta para a caixa por id. Se a conexão foi removida entre o
   // refresh e o aquecimento, não há credencial para buscar o corpo.
   it('ignora envelope de uma caixa que não está mais na lista', async () => {
     const { warmBodyCache } = await import('@/lib/emailCache');
-    vi.mocked(fetchBody).mockResolvedValue('baixado');
+    vi.mocked(fetchBodies).mockResolvedValue([]);
 
     const fetched = await warmBodyCache('u-1', [], [envelope({ id: '1' })]);
 
     expect(fetched).toBe(0);
-    expect(fetchBody).not.toHaveBeenCalled();
+    expect(fetchBodies).not.toHaveBeenCalled();
   });
 
   it('não devolve para um usuário o corpo cacheado por outro', async () => {

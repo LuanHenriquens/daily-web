@@ -47,15 +47,30 @@ async function withClient<T>(conn: Connection, fn: (client: ImapFlow) => Promise
     connectionTimeout: CONNECT_TIMEOUT_MS,
   });
 
+  // Um socket que cai fora de um comando emite `error` no cliente, sem
+  // promessa para carregar a falha: sem ouvinte isso sobe como
+  // uncaughtException e derruba o processo inteiro por causa de uma caixa.
+  client.on('error', () => {});
+
   try {
     await client.connect();
     return await fn(client);
   } catch (err) {
     throw new Error(`${conn.label}: ${describeMailError(err)}`);
   } finally {
-    // `logout` fala IMAP com um servidor que pode já ter sumido; derrubar o
-    // socket é o fallback para não vazar conexão nem mascarar o erro real.
-    await client.logout().catch(() => client.close());
+    // `logout` fala IMAP com um servidor que pode já ter sumido, e nesse caso
+    // rejeita. Derrubar o socket é o fallback para não vazar conexão; nenhum
+    // dos dois pode substituir o erro real que está subindo daqui.
+    try {
+      await client.logout();
+    } catch {
+      // Encerramento sujo não é o defeito que interessa a quem chamou.
+    }
+    try {
+      client.close();
+    } catch {
+      // Idem: o socket já pode ter ido embora sozinho.
+    }
   }
 }
 
@@ -215,16 +230,75 @@ export async function fetchBody(
     if (!path) return '';
     const lock = await client.getMailboxLock(path);
     try {
-      const message = await client.fetchOne(uid, { source: true }, { uid: true });
-      if (!message || !message.source) return '';
-      const parsed = await simpleParser(message.source);
-      // O text/plain é o que o remetente escreveu para ser lido; só caímos no
-      // HTML — que `readable` ainda precisa limpar — quando ele não existe.
-      if (parsed.text?.trim()) return readable(parsed.text);
-      return parsed.html ? readable(parsed.html) : '';
+      return await bodyOf(client, uid);
     } finally {
       lock.release();
     }
+  });
+}
+
+async function bodyOf(client: ImapFlow, uid: string): Promise<string> {
+  const message = await client.fetchOne(uid, { source: true }, { uid: true });
+  if (!message || !message.source) return '';
+  const parsed = await simpleParser(message.source);
+  // O text/plain é o que o remetente escreveu para ser lido; só caímos no
+  // HTML — que `readable` ainda precisa limpar — quando ele não existe.
+  if (parsed.text?.trim()) return readable(parsed.text);
+  return parsed.html ? readable(parsed.html) : '';
+}
+
+export interface BodyRequest {
+  uid: string;
+  mailbox: MailboxKind;
+}
+
+export interface FetchedBody extends BodyRequest {
+  body: string;
+}
+
+const MAILBOX_ORDER: MailboxKind[] = ['inbox', 'sent'];
+
+/**
+ * Vários corpos numa conexão só, agrupados por caixa para abrir cada uma uma
+ * única vez. Uma conexão por mensagem faz o servidor recusar os logins
+ * seguintes — a mesma razão que já obriga as operações de caixa a receberem o
+ * lote inteiro de uids.
+ *
+ * Uma mensagem que falha sai do resultado sem levar as outras junto: quem
+ * chama guarda o que veio e tenta o resto depois.
+ */
+export async function fetchBodies(
+  conn: Connection,
+  requests: BodyRequest[],
+): Promise<FetchedBody[]> {
+  if (requests.length === 0) return [];
+
+  return withClient(conn, async (client) => {
+    const fetched: FetchedBody[] = [];
+
+    for (const mailbox of MAILBOX_ORDER) {
+      const daCaixa = requests.filter((r) => r.mailbox === mailbox);
+      if (daCaixa.length === 0) continue;
+
+      const path = await mailboxPath(client, mailbox);
+      if (!path) continue;
+
+      const lock = await client.getMailboxLock(path);
+      try {
+        for (const { uid } of daCaixa) {
+          try {
+            fetched.push({ uid, mailbox, body: await bodyOf(client, uid) });
+          } catch {
+            // Mensagem apagada entre a listagem e agora, ou ilegível: o
+            // aquecimento tenta de novo no ciclo seguinte.
+          }
+        }
+      } finally {
+        lock.release();
+      }
+    }
+
+    return fetched;
   });
 }
 

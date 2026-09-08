@@ -65,14 +65,54 @@ const emVoo = new Map<symbol, { userId: string; patches: Patch[] }>();
 // para ser reconciliado e o cache atual — que já reflete tudo — fica de pé.
 const MAX_PATCHES_EM_VOO = 500;
 
-export async function refreshAll(userId: string): Promise<DashboardState> {
+// Um refresh por usuário de cada vez. O botão "atualizar" e o ciclo do timer
+// disputavam as mesmas caixas: cada rodada extra abre um login novo em cada
+// conta e o servidor recusa os seguintes, o que fazia o painel voltar com
+// erro — e o clique repetido, que é a reação natural, só piorava a disputa.
+// Quem chega no meio de um refresh recebe o resultado do que já está em curso.
+const refreshesEmCurso = new Map<string, Promise<DashboardState>>();
+
+export function refreshAll(userId: string): Promise<DashboardState> {
+  const emCurso = refreshesEmCurso.get(userId);
+  if (emCurso) return emCurso;
+
+  const promessa = buildFresh(userId).finally(() => refreshesEmCurso.delete(userId));
+  refreshesEmCurso.set(userId, promessa);
+  return promessa;
+}
+
+async function buildFresh(userId: string): Promise<DashboardState> {
   const ciclo = Symbol('refresh');
   emVoo.set(ciclo, { userId, patches: [] });
+  const inicio = Date.now();
   try {
-    return await buildState(userId, ciclo);
+    const state = await buildState(userId, ciclo);
+    logCycle(userId, inicio, state);
+    return state;
   } finally {
     emVoo.delete(ciclo);
   }
+}
+
+/** O painel só mostra o resultado; sem isto, um ciclo que degrada — lento ou
+ *  com uma fonte fora do ar — só aparece como tela parada. Uma linha por
+ *  ciclo, nunca por item. */
+function logCycle(userId: string, inicio: number, state: DashboardState): void {
+  const panels: Record<string, PanelResult<unknown>> = {
+    email: state.email,
+    agenda: state.agenda,
+    pulls: state.pulls,
+    jira: state.jira,
+    tasks: state.tasks,
+  };
+  const errors = Object.entries(panels)
+    .filter(([, panel]) => panel.error)
+    .map(([name, panel]) => `${name}: ${panel.error}`);
+
+  console.info(
+    'refresh.cycle',
+    JSON.stringify({ userId, ms: Date.now() - inicio, errors }),
+  );
 }
 
 async function buildState(userId: string, ciclo: symbol): Promise<DashboardState> {
@@ -197,15 +237,34 @@ async function refreshEveryone(): Promise<void> {
   pruneOldBodies();
 }
 
+// Um ciclo que passa do intervalo faria o próximo começar por cima dele,
+// dobrando as conexões abertas em cada caixa a cada tique. Enquanto o anterior
+// não termina, o tique é descartado — não enfileirado, que só adiaria a mesma
+// sobreposição.
+let cicloEmCurso = false;
+
 export function startRefreshLoop(intervalSeconds: number): void {
   if (timer) return;
-  void refreshEveryone();
-  timer = setInterval(() => void refreshEveryone(), intervalSeconds * 1000);
+
+  const tick = async () => {
+    if (cicloEmCurso) return;
+    cicloEmCurso = true;
+    try {
+      await refreshEveryone();
+    } finally {
+      cicloEmCurso = false;
+    }
+  };
+
+  void tick();
+  timer = setInterval(() => void tick(), intervalSeconds * 1000);
 }
 
 export function resetCachesForTests(): void {
   caches.clear();
   emVoo.clear();
+  refreshesEmCurso.clear();
+  cicloEmCurso = false;
   if (timer) clearInterval(timer);
   timer = null;
 }

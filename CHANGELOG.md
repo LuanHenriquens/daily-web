@@ -102,6 +102,9 @@ Only `main` is maintained; there are no release branches.
   did not exist, so GitHub reported the project as "Other".
 
 ### Changed
+- Each refresh cycle logs one line, `refresh.cycle`, with its duration and the
+  panels that came back with an error. A degrading cycle used to be visible
+  only as a panel that stopped moving.
 - The arrangement is saved when you ask, not while you drag. **Organizar** now
   leads to **Salvar para esta tela** and **Descartar**, and nothing reaches the
   server until you pick one — so a layout you messed up costs nothing.
@@ -131,6 +134,21 @@ Only `main` is maintained; there are no release branches.
   keep working. New hashes are written as `$2b$` instead of `$2a$`.
 
 ### Fixed
+- The email panel no longer goes stale until you press refresh several times.
+  Three sources of IMAP contention were making the automatic cycle fail: body
+  warming opened one connection per message, so a cycle with thirty new emails
+  attempted thirty logins per mailbox and the server started rejecting them
+  with an authentication failure; a cycle that ran past the interval had the
+  next one start on top of it; and the refresh button opened a second read
+  alongside the running cycle, so clicking again made the contention worse
+  instead of better. Body warming now fetches through a single connection per
+  account, capped per cycle; a tick is skipped while the previous cycle is
+  still running; and a refresh requested while one is in flight — from the
+  button or from the loop — receives the result of the one already running.
+- A mailbox whose socket dropped outside a command no longer takes the whole
+  process down. The IMAP client had no `error` listener, so the failure
+  surfaced as an uncaught exception, and the connection teardown could reject
+  on its own and mask the real error.
 - Deleting an email no longer brings it back a few seconds later. A refresh
   cycle reads the mailboxes at the start and only writes the cached dashboard
   state at the end, so an action taken in between was overwritten by a

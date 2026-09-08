@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-vi.mock('@/lib/integrations/imap', () => ({ listEnvelopes: vi.fn(), fetchBody: vi.fn() }));
+vi.mock('@/lib/integrations/imap', () => ({ listEnvelopes: vi.fn(), fetchBodies: vi.fn() }));
 vi.mock('@/lib/integrations/ics', () => ({ fetchAgenda: vi.fn() }));
 vi.mock('@/lib/integrations/githubApi', () => ({ fetchPulls: vi.fn() }));
 vi.mock('@/lib/integrations/jiraApi', () => ({ fetchIssues: vi.fn(), fetchMentions: vi.fn() }));
@@ -214,5 +214,50 @@ describe('ação concorrente com um refresh em voo', () => {
     await emVoo;
 
     expect(getCachedState(USER)?.email.data).toEqual([]);
+  });
+});
+
+describe('refresh simultâneo', () => {
+  // Cada rodada extra abre um login novo em cada caixa e o servidor recusa os
+  // seguintes. O clique no botão durante o ciclo do timer precisa aproveitar o
+  // que já está em curso em vez de abrir uma segunda leitura.
+  it('reaproveita o refresh em curso em vez de abrir outro', async () => {
+    await connect(USER, 'email', { preset: 'gmail', user: 'a@x.com', password: 's' });
+    const { refreshAll } = await import('@/lib/refresher');
+
+    let liberar: (envelopes: unknown[]) => void = () => {};
+    vi.mocked(listEnvelopes).mockReturnValue(
+      new Promise((resolve) => {
+        liberar = resolve as (envelopes: unknown[]) => void;
+      }) as ReturnType<typeof listEnvelopes>,
+    );
+
+    const primeiro = refreshAll(USER);
+    const segundo = refreshAll(USER);
+    liberar([envelope()]);
+
+    expect(await primeiro).toBe(await segundo);
+    expect(listEnvelopes).toHaveBeenCalledTimes(1);
+  });
+
+  it('volta a ler o servidor depois que o refresh anterior termina', async () => {
+    await connect(USER, 'email', { preset: 'gmail', user: 'a@x.com', password: 's' });
+    const { refreshAll } = await import('@/lib/refresher');
+
+    await refreshAll(USER);
+    await refreshAll(USER);
+
+    expect(listEnvelopes).toHaveBeenCalledTimes(2);
+  });
+
+  // Um usuário esperando o IMAP não pode segurar o refresh do outro.
+  it('não junta o refresh de usuários diferentes', async () => {
+    await connect(USER, 'email', { preset: 'gmail', user: 'a@x.com', password: 's' });
+    await connect(OTHER, 'email', { preset: 'gmail', user: 'b@x.com', password: 's' });
+    const { refreshAll } = await import('@/lib/refresher');
+
+    await Promise.all([refreshAll(USER), refreshAll(OTHER)]);
+
+    expect(listEnvelopes).toHaveBeenCalledTimes(2);
   });
 });

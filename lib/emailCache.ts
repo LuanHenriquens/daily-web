@@ -1,5 +1,5 @@
 import { getDb } from './db';
-import { fetchBody } from './integrations/imap';
+import { fetchBodies } from './integrations/imap';
 import type { Connection } from './vault/connections';
 import type { Account, EmailEnvelope, MailboxKind } from './types';
 
@@ -61,27 +61,42 @@ export function isCached(
   return row !== undefined;
 }
 
-// Roda em segundo plano depois de cada refresh: só busca o que ainda não
-// está em cache, um de cada vez, para não abrir dezenas de conexões IMAP.
+// Teto por conta e por ciclo. O aquecimento roda em segundo plano enquanto o
+// próximo ciclo do refresher se aproxima; sem limite, uma caixa que acabou de
+// ser ligada seguraria a conexão por tempo demais e disputaria o login com o
+// refresh seguinte. O que sobra é aquecido nos ciclos posteriores.
+const MAX_BODIES_PER_CYCLE = 15;
+
+// Roda em segundo plano depois de cada refresh: só busca o que ainda não está
+// em cache e usa uma conexão por conta — não uma por mensagem, que é o que faz
+// o servidor recusar os logins seguintes com falha de autenticação.
 export async function warmBodyCache(
   userId: string,
   connections: Connection[],
   envelopes: EmailEnvelope[],
 ): Promise<number> {
-  const byId = new Map(connections.map((conn) => [conn.id, conn]));
   let fetched = 0;
-  for (const envelope of envelopes) {
-    if (isCached(userId, envelope.account, envelope.id, envelope.mailbox)) continue;
-    const conn = byId.get(envelope.account);
-    if (!conn) continue;
+
+  for (const conn of connections) {
+    const faltando = envelopes
+      .filter(
+        (e) => e.account === conn.id && !isCached(userId, e.account, e.id, e.mailbox),
+      )
+      .slice(0, MAX_BODIES_PER_CYCLE)
+      .map((e) => ({ uid: e.id, mailbox: e.mailbox }));
+
+    if (faltando.length === 0) continue;
+
     try {
-      const body = await fetchBody(conn, envelope.id, envelope.mailbox);
-      putCachedBody(userId, envelope.account, envelope.id, body, envelope.mailbox);
-      fetched += 1;
+      for (const { uid, mailbox, body } of await fetchBodies(conn, faltando)) {
+        putCachedBody(userId, conn.id, uid, body, mailbox);
+        fetched += 1;
+      }
     } catch {
-      // Um e-mail que falhou não pode interromper o aquecimento dos outros;
-      // ele será tentado de novo no próximo ciclo.
+      // Uma caixa fora do ar não pode interromper o aquecimento das outras;
+      // ela será tentada de novo no próximo ciclo.
     }
   }
+
   return fetched;
 }
