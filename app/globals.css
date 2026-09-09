@@ -434,17 +434,42 @@ textarea {
   justify-content: center;
   gap: var(--s2);
   min-height: 32px;
-  padding: 0 var(--s3);
-  border: 1px solid var(--hairline);
-  border-radius: 7px;
-  background: transparent;
+  padding: 0 var(--s4);
+  border: 1px solid var(--line-strong);
+  /* Botão, chip e pílula de status são redondos e ficam fora da escada de
+     raio: a escada é para container, não para controle. */
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: var(--step--1);
   cursor: pointer;
+  box-shadow: var(--elevation-1);
   transition:
     background var(--fast) var(--ease),
     color var(--fast) var(--ease),
-    border-color var(--fast) var(--ease);
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: var(--elevation-2);
+}
+
+/* O único translate do sistema: 1px de afundamento ao pressionar, atrás de
+   motion-safe. Movimento aqui confirma a ação, não decora. */
+@media (prefers-reduced-motion: no-preference) {
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.btn:active:not(:disabled) {
+  box-shadow: none;
+}
+
+.btn:disabled {
+  box-shadow: none;
 }
 
 .btn:hover:not(:disabled) {
@@ -459,22 +484,35 @@ textarea {
 
 .btn-primary {
   border-color: transparent;
-  background: var(--accent);
-  color: #16101f;
+  /* O `background-color` fica por baixo de propósito: é o que pinta caso a
+     face de gradiente não resolva. O hover é brilho, não troca de fundo —
+     um fundo sólido pintaria por cima da face e a apagaria. */
+  background-color: var(--brand);
+  background-image: var(--button-face);
+  color: var(--brand-ink);
   font-weight: 500;
+  box-shadow: var(--button-rim), var(--elevation-2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #c6a5ff;
-  color: #16101f;
+  filter: brightness(1.06);
+  box-shadow: var(--button-rim), var(--elevation-3);
+}
+
+.btn-primary:active:not(:disabled) {
+  filter: brightness(0.95);
+  box-shadow: var(--button-rim), var(--elevation-1);
 }
 
 .btn-ghost {
   border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-hover);
+  box-shadow: none;
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -484,28 +522,32 @@ textarea {
 
 .field {
   min-height: 32px;
-  padding: 0 var(--s3);
-  border: 1px solid var(--hairline);
-  border-radius: 7px;
-  background: var(--surface);
+  padding: 0 var(--s4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(8px);
   color: var(--text);
   font-size: var(--step--1);
-  transition: border-color var(--fast) var(--ease);
+  box-shadow: var(--elevation-1);
+  transition:
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease);
 }
 
 /* Selects nativos trazem uma seta do sistema que destoa do resto; desenhamos
    a nossa em SVG inline para o controle ficar coerente com os chips. */
 select.field {
   appearance: none;
-  padding-right: calc(var(--s3) + 14px);
+  padding-right: calc(var(--s4) + 14px);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239891ac' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right var(--s3) center;
+  background-position: right var(--s4) center;
   cursor: pointer;
 }
 
 select.field option {
-  background: var(--surface);
+  background: var(--surface-4);
   color: var(--text);
 }
 
@@ -517,9 +559,9 @@ input[type='checkbox'] {
   width: 16px;
   height: 16px;
   margin: 0;
-  border: 1px solid var(--hairline-strong);
-  border-radius: 5px;
-  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass);
   cursor: pointer;
   transition:
     background var(--fast) var(--ease),
@@ -543,7 +585,7 @@ input[type='checkbox']:checked {
 }
 
 .field:focus {
-  border-color: var(--accent-dim);
+  border-color: var(--brand);
 }
 
 /* ---------- filtros ---------- */
@@ -596,9 +638,12 @@ input[type='checkbox']:checked {
 }
 
 .chip-active {
-  border-color: var(--accent-dim);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--brand-edge);
+  background: var(--brand-tint);
   color: var(--text);
+  /* Aro neutro: um chip aceso é um controle, não uma ação. O aro do acento
+     tingiria a peça inteira. */
+  box-shadow: var(--control-rim), var(--elevation-1);
 }
 
 /* ---------- abas ----------
@@ -679,9 +724,11 @@ input[type='checkbox']:checked {
   max-height: 85dvh;
   overflow-y: auto;
   padding: var(--s5) var(--s5) calc(var(--s5) + env(safe-area-inset-bottom));
-  background: var(--surface);
-  border-top: 1px solid var(--hairline-strong);
-  border-radius: 18px 18px 0 0;
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--elevation-5);
   animation: sheet-in var(--med) var(--ease);
 }
 
@@ -1105,7 +1152,7 @@ textarea.mail-reply-input {
   height: 26px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 999px;
   background: none;
   color: var(--text-faint);
   cursor: pointer;
@@ -1150,10 +1197,11 @@ textarea.mail-reply-input {
   max-height: 320px;
   overflow-y: auto;
   padding: var(--s2);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 12px;
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-4);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1627,10 +1675,11 @@ textarea.mail-reply-input {
   max-height: 70vh;
   overflow-y: auto;
   padding: var(--s4);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-4);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1719,9 +1768,11 @@ textarea.mail-reply-input {
   flex-direction: column;
   gap: var(--s4);
   padding: var(--s6);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 16px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-5);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1801,8 +1852,13 @@ textarea.mail-reply-input {
 .skeleton {
   display: block;
   height: 12px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-4) 50%,
+    var(--surface-2) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-sweep 1.4s linear infinite;
 }
@@ -1816,25 +1872,122 @@ textarea.mail-reply-input {
   }
 }
 
+/* A única borda tracejada do sistema, e sobre a superfície recuada em vez da
+   elevada: uma caixa vazia é um buraco, não um painel. */
 .empty {
-  padding: var(--s6) 0;
-  color: var(--text-faint);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s7) var(--s5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-muted);
   font-size: var(--step--1);
+  text-align: center;
+}
+
+.empty-title {
+  color: var(--text);
+}
+
+.empty p {
+  max-width: 42ch;
 }
 
 /* Um painel sem credencial é informação, não alarme: o erro fica contido
    num bloco discreto com marcador lateral, em vez de texto vermelho solto
    competindo com o conteúdo real das outras seções. */
+/* Uma busca que falhou desenha um card dentro da moldura da página, nunca uma
+   fronteira que leva a navegação junto. Diz o que falhou e oferece repetir. */
 .panel-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
   margin: var(--s2) 0;
-  padding: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--signal-warning-tint);
   border-left: 2px solid var(--warn);
-  border-radius: 0 6px 6px 0;
-  background: color-mix(in srgb, var(--warn) 7%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--signal-warning-tint);
   color: var(--text-muted);
   font-size: var(--step--1);
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+/* ---------- status ----------
+   Estado nunca é só matiz: cada pílula carrega glifo e rótulo junto, para a
+   leitura sobreviver a daltonismo e a uma impressão em preto e branco.
+   O glifo é texto Unicode dentro de um aria-hidden, não um ícone: um ícone
+   muda o alinhamento pela linha de base e quebra o ritmo do vão. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  width: fit-content;
+  padding: 0.125rem var(--s2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.status-pill-glyph {
+  font-size: 0.75em;
+  line-height: 1;
+}
+
+/* Nenhum destes segue o acento: um status não pode mudar de cor porque o
+   acento mudou, sem nada ter acontecido com o status. */
+.status-neutral {
+  border-color: var(--line-strong);
+  background: var(--signal-neutral-tint);
+  color: var(--text-muted);
+}
+
+.status-success {
+  border-color: oklch(from var(--signal-success) l c h / 40%);
+  background: var(--signal-success-tint);
+  color: var(--signal-success);
+}
+
+.status-warning {
+  border-color: oklch(from var(--signal-warning) l c h / 45%);
+  background: var(--signal-warning-tint);
+  color: var(--signal-warning);
+}
+
+.status-danger {
+  border-color: oklch(from var(--signal-danger) l c h / 40%);
+  background: var(--signal-danger-tint);
+  color: var(--signal-danger);
+}
+
+.status-info {
+  border-color: oklch(from var(--signal-info) l c h / 40%);
+  background: var(--signal-info-tint);
+  color: var(--signal-info);
+}
+
+/* Um qualificador secundário fica FORA da pílula: dentro, ele competiria com
+   o rótulo que carrega o estado. */
+.status-note {
+  font-size: var(--step--1);
+  color: var(--text-faint);
+}
+
+/* Onde a pílula pesa demais numa lista densa, o mesmo vocabulário vira um
+   ponto de 8px — e aí o rótulo traduzido é que carrega o sentido. */
+.status-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
 }
 
 /* ---------- login ---------- */
@@ -2377,6 +2530,14 @@ textarea.mail-reply-input {
 .grid-panel {
   min-width: 0;
   overflow: hidden;
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--glass);
+  /* O blur não é enfeite: é o que mantém o fundo ambiente longe do texto.
+     Sem ele o painel mostra o gradiente cru por dentro do conteúdo. */
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: var(--elevation-2);
 }
 
 /* O painel tem altura definida pela grade, então o conteúdo rola por dentro.
@@ -2395,7 +2556,7 @@ textarea.mail-reply-input {
 }
 
 .dashboard-grid.is-arranging .grid-panel {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   outline: 1px dashed var(--hairline-strong);
   outline-offset: var(--s2);
   cursor: grab;
@@ -2418,14 +2579,14 @@ textarea.mail-reply-input {
 
 .react-grid-item.react-draggable-dragging .grid-panel {
   outline-color: var(--accent);
-  background: var(--surface);
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--surface-3);
+  box-shadow: var(--elevation-5);
 }
 
 /* O retângulo que mostra onde o painel vai cair. */
 .react-grid-item.react-grid-placeholder {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  border-radius: 12px;
+  background: var(--brand-tint);
+  border-radius: var(--radius-xl);
   opacity: 1;
 }
 
