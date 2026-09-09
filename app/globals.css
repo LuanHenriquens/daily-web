@@ -1268,20 +1268,24 @@ textarea.mail-reply-input {
   text-decoration: line-through;
 }
 
+/* A cor e o glifo vêm da pílula; esta classe só reserva o espaço. */
 .task-flag {
-  font-size: 0.6875rem;
-  padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid currentColor;
   flex: none;
 }
 
-.task-flag-high {
-  color: var(--warn);
-}
-
-.task-flag-low {
-  color: var(--text-faint);
+/* Etiqueta neutra: diz um atributo do item, não o estado dele. Por isso não
+   ganha glifo nem matiz — só o peso mínimo para se separar do texto ao lado. */
+.tag {
+  flex: none;
+  padding: 0.125rem var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--signal-neutral-tint);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .task-due {
@@ -1451,19 +1455,13 @@ textarea.mail-reply-input {
 
 /* A situação é o que muda de linha para linha; a cor separa "já comecei" de
    "ainda não" sem precisar ler. */
+/* A cor e o glifo vêm da pílula de status; estas classes seguem existindo
+   como gancho, sem pintar nada. O status não pode seguir o acento. */
 .jira-status {
-  color: var(--text-muted);
+  flex: none;
 }
 
-.jira-status-indeterminate {
-  color: var(--accent);
-}
 
-/* Entregue é a única situação que não pede nada de você: verde, e a aba
-   "Entregues" fica legível de relance, sem ler status por status. */
-.jira-status-done {
-  color: var(--success);
-}
 
 /* Esquecido e atrasado são os dois avisos do painel: ficam quentes, e são
    raros o bastante para a cor continuar significando alguma coisa. */
@@ -2932,4 +2930,11 @@ textarea.mail-reply-input {
   gap: var(--s2);
   flex-wrap: wrap;
   margin-bottom: var(--s2);
+}
+
+.status-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s2);
+  min-width: 0;
 }
