@@ -8,7 +8,40 @@ Only `main` is maintained; there are no release branches.
 
 ## [Unreleased]
 
+### Changed
+- The whole look moves onto a new token layer. Colour is `oklch()` end to
+  end, on a six-level surface ramp where depth comes from luminosity rather
+  than shadow, since shadow barely reads on this background. Panels, modals,
+  popovers and the filter sheet become translucent surfaces over the ambient
+  gradient, each carrying a large inset top highlight and an elevation from a
+  five-step ramp; controls become pills. The stylesheet's previous
+  "hierarchy by space and line, never by box" principle is replaced by that
+  card. The old token names survive as aliases onto the new layer rather than
+  being deleted, so the several hundred existing call sites keep working.
+- Type is seven roles that each carry family, size, leading, weight and
+  tracking together. Eleven loose sizes below the 13px caption floor were
+  routed to the role they already wanted; 10px and 12px scattered across
+  panels were what flattened the difference between a label and the text
+  beside it. Uppercase micro-labels with wide tracking are gone. Numbers move
+  off the mono face onto the text face with tabular figures in 21 call sites,
+  leaving mono only for a Jira key, a type marker and an identifier.
+- Status is never hue alone. Jira status and task priority render through one
+  vocabulary where each state carries a glyph and a label beside the colour,
+  so the reading survives a grayscale print. Jira's "in flight" and the
+  pending-approval badge move off the accent onto fixed signal colours: a
+  status that follows the accent changes colour when the accent changes, with
+  nothing about the status having changed.
+- The ambient background gains three fixed washes alongside the two the hour
+  of day already drove, so a translucent panel has something to refract. The
+  hour arc itself is unchanged.
+
 ### Added
+- A display density setting on the configuration screen, comfortable or
+  compact. Compact changes vertical rhythm only; text size and horizontal
+  breathing stay put, because a dense screen needs more visible lines, not
+  smaller type. The attribute is stamped on the root element during server
+  render, so the choice survives a reload with no first-paint flash, and
+  dialogs, sheets and popovers inherit it.
 - A third tab, **Aprovados**, listing what you approved. There is no JQL
   function for it: `myApproved()` and `myDecided()` do not exist,
   `approvedBy(currentUser())` is rejected because the `approvals` field takes no
