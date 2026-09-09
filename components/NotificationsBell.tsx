@@ -147,7 +147,7 @@ export function NotificationsBell({
                     <span className="bell-item-title">{item.title}</span>
                   )}
                   <div className="bell-item-foot">
-                    <span className="bell-source mono">{SOURCE_LABEL[item.source]}</span>
+                    <span className="bell-source">{SOURCE_LABEL[item.source]}</span>
                     {!item.read && (
                       <button
                         type="button"

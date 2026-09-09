@@ -389,9 +389,9 @@ export function TasksPanel({
                       repete
                     </span>
                   )}
-                  {task.due && <span className="task-due mono">{formatDue(task.due, task.time)}</span>}
+                  {task.due && <span className="task-due tabular">{formatDue(task.due, task.time)}</span>}
                   {task.subtasks.length > 0 && (
-                    <span className="task-due mono" title="subtarefas concluídas">
+                    <span className="task-due tabular" title="subtarefas concluídas">
                       {task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length}
                     </span>
                   )}

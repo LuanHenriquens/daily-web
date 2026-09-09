@@ -318,7 +318,7 @@ export function JiraPanel({
             <h3 className="jira-group-label eyebrow">
               Acompanhando
               {acompanhadas.length > 0 && (
-                <span className="section-count mono"> {acompanhadas.length}</span>
+                <span className="section-count tabular"> {acompanhadas.length}</span>
               )}
             </h3>
 
@@ -419,7 +419,7 @@ export function JiraPanel({
               <div key={group.category} className="jira-project">
                 <h3 className="jira-group-label eyebrow">
                   {group.label}
-                  <span className="section-count mono"> {group.issues.length}</span>
+                  <span className="section-count tabular"> {group.issues.length}</span>
                 </h3>
                 <ul>
                   {group.issues.map((issue) => (
@@ -462,7 +462,7 @@ function JiraProjects({
         <div key={group.project} className="jira-project">
           <h3 className="jira-group-label eyebrow">
             {group.project}
-            <span className="section-count mono"> {group.count}</span>
+            <span className="section-count tabular"> {group.count}</span>
           </h3>
           <ul>
             {group.roots.map((node) => (

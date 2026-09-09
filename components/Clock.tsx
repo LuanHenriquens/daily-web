@@ -44,7 +44,7 @@ export function Clock() {
   if (!now) {
     return (
       <div className="now-clock">
-        <span className="now-time mono" data-testid="clock-time">
+        <span className="now-time tabular" data-testid="clock-time">
           &nbsp;
         </span>
         <span className="now-date" data-testid="clock-date">
@@ -56,7 +56,7 @@ export function Clock() {
 
   return (
     <div className="now-clock">
-      <time className="now-time mono" data-testid="clock-time">
+      <time className="now-time tabular" data-testid="clock-time">
         {pad(now.getHours())}:{pad(now.getMinutes())}:{pad(now.getSeconds())}
       </time>
       <span className="now-date" data-testid="clock-date">
