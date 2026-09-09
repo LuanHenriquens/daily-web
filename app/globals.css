@@ -447,6 +447,9 @@ textarea {
   background: var(--surface-2);
   color: var(--text-muted);
   font-size: var(--step--1);
+  /* Um <a> com classe de botão herdava o sublinhado do navegador; agora que o
+     botão tem superfície própria, o sublinhado lia como defeito. */
+  text-decoration: none;
   cursor: pointer;
   box-shadow: var(--elevation-1);
   transition:
@@ -2549,6 +2552,12 @@ textarea.mail-reply-input {
      Sem ele o painel mostra o gradiente cru por dentro do conteúdo. */
   backdrop-filter: blur(20px) saturate(150%);
   box-shadow: var(--elevation-2);
+}
+
+/* Numa largura estreita não há grade impondo altura: o painel cresce com o
+   conteúdo e quem rola é a página. */
+.grid-panel-flow {
+  overflow: visible;
 }
 
 /* O painel tem altura definida pela grade, então o conteúdo rola por dentro.
