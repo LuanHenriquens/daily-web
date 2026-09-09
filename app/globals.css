@@ -394,8 +394,9 @@ textarea {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s4);
-  padding-bottom: var(--s3);
-  border-bottom: 1px solid var(--hairline);
+  /* Sem régua sob o cabeçalho: agora que o painel é um card, a borda dele já
+     diz onde a peça começa, e a segunda linha só some com o respiro. */
+  padding-bottom: var(--s2);
   margin-bottom: var(--s4);
 }
 
@@ -406,17 +407,21 @@ textarea {
   min-width: 0;
 }
 
+/* Rótulo de seção em caixa de frase, sem tracking largo. Caixa alta com
+   tracking é o que faz uma tela ler como terminal em vez de produto, e é
+   também o que apagava a diferença entre um rótulo e o título ao lado. */
 .eyebrow {
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-faint);
 }
 
 .section-count {
   font-size: var(--step--1);
   color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .section-actions {
@@ -766,7 +771,7 @@ input[type='checkbox']:checked {
   gap: var(--s5);
   flex-wrap: wrap;
   padding: var(--s8) 0 var(--s6);
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--line-soft);
   margin-bottom: var(--s7);
 }
 
@@ -2022,9 +2027,11 @@ textarea.mail-reply-input {
 }
 
 .login-title {
-  font-size: var(--step-2);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 2.125rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.04em;
 }
 
 .login-sub {
@@ -2916,4 +2923,13 @@ textarea.mail-reply-input {
 [data-density='compact'] .now {
   padding-block: var(--s6) var(--s5);
   margin-bottom: var(--s5);
+}
+
+/* ---------- densidade (configuração) ---------- */
+
+.density-options {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  margin-bottom: var(--s2);
 }
