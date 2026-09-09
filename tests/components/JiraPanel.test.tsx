@@ -28,6 +28,7 @@ function issue(over: Partial<JiraItem>): JiraItem {
     url: 'https://example/A-1',
     parent: null,
     role: 'assignee',
+    awaitingApproval: false,
     kind: 'História',
     subtask: false,
     updatedAt: new Date().toISOString(),
@@ -501,5 +502,44 @@ describe('aba Entregues', () => {
     render(<Panel delivered={{ data: null, error: 'jira recusou o token' }} />);
     fireEvent.click(screen.getByRole('tab', { name: /Entregues/ }));
     expect(screen.getByRole('alert').textContent).toContain('jira recusou o token');
+  });
+});
+
+describe('aguardando a minha aprovação', () => {
+  it('marca com APROV a issue que espera pela sua decisão', () => {
+    render(
+      <Panel
+        jira={{ data: [issue({ key: 'PDS-2138', awaitingApproval: true })], error: null }}
+      />,
+    );
+
+    expect(screen.getByText('APROV')).toBeInTheDocument();
+  });
+
+  it('não marca as demais issues', () => {
+    render(<Panel jira={{ data: [issue({ key: 'A-1' })], error: null }} />);
+
+    expect(screen.queryByText('APROV')).not.toBeInTheDocument();
+  });
+
+  // Aprovar não é ser responsável nem relator, então o filtro por papel não
+  // pode esconder o que espera por você: some o resto, ela fica.
+  it('continua visível quando o filtro por papel está ativo', () => {
+    render(
+      <Panel
+        jira={{
+          data: [
+            issue({ key: 'A-1', role: 'assignee' }),
+            issue({ key: 'PDS-2138', role: 'assignee', awaitingApproval: true }),
+          ],
+          error: null,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /relator/i }));
+
+    expect(screen.getByText('PDS-2138')).toBeInTheDocument();
+    expect(screen.queryByText('A-1')).not.toBeInTheDocument();
   });
 });

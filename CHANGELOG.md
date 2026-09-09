@@ -9,6 +9,17 @@ Only `main` is maintained; there are no release branches.
 ## [Unreleased]
 
 ### Added
+- **Em aberto** also lists what is waiting for your approval. Until now the tab
+  answered "what is assigned to or reported by me", which left out the requests
+  that only need a decision from you — they belong to someone else and never
+  showed up. The query asks Jira for `approvals = myPending()`, the one thing
+  that separates an approval waiting on *you* from an issue merely parked in a
+  status called "Aprovação", which may be waiting on somebody else. An approval
+  carries an `APROV` badge, joins the same hierarchy and project grouping as the
+  rest, and an issue that is both yours and pending your approval stays a single
+  row. Approving is not one of the roles, so these issues also survive the
+  Responsável/Relator filter: narrowing by role no longer hides what is asking
+  you for a decision.
 - **Marcar todas como lidas**, in the notification bell. The bell holds up to
   20 items per source across three sources, so emptying it one row at a time
   cost up to 60 clicks. The button sits above the list with the unread count

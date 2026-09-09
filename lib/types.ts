@@ -93,6 +93,9 @@ export interface JiraItem {
   url: string;
   parent: JiraParent | null;
   role: JiraRole;
+  /** Aprovação é ortogonal ao papel: você pode ser o responsável pela issue e
+   *  o aprovador dela ao mesmo tempo, então isto não cabe em `role`. */
+  awaitingApproval: boolean;
   kind: string;
   subtask: boolean;
   /** ISO da última alteração. É daqui que sai "parado há X dias". */

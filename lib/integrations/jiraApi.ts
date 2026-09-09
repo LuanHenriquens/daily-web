@@ -71,6 +71,7 @@ export function toJiraItem(raw: RawIssue, baseUrl: string, role: JiraRole): Jira
       ? { key: fields.parent.key ?? '', summary: fields.parent.fields?.summary ?? '' }
       : null,
     role,
+    awaitingApproval: false,
     kind: fields.issuetype?.name ?? '',
     subtask: fields.issuetype?.subtask ?? false,
   };
@@ -110,8 +111,19 @@ async function search(auth: JiraAuth, jql: string): Promise<RawIssue[]> {
 
 const OPEN = 'statusCategory != Done';
 
+// O que espera por uma decisão sua. `myPending()` é a função que a instância
+// aceita — `pendingBy(currentUser())` é recusada com erro de sintaxe — e é ela
+// que separa o que aguarda você do que apenas está parado num status chamado
+// "Aprovação", que pode estar esperando outra pessoa. Depender do nome do
+// status traria a issue errada.
+const AWAITING_MY_APPROVAL = `approvals = myPending() AND ${OPEN} ORDER BY updated DESC`;
+
 /** Uma issue pode ser sua como responsável e como relator ao mesmo tempo; a
- *  união é feita por chave para ela não aparecer duas vezes na lista. */
+ *  união é feita por chave para ela não aparecer duas vezes na lista.
+ *
+ *  A aprovação entra na mesma união, e não como lista à parte, porque é a
+ *  mesma pergunta — "o que ainda pede algo de mim" — e porque uma issue que
+ *  seja sua e espere sua aprovação precisa continuar sendo uma linha só. */
 export async function fetchIssues(conn: Connection, filter: JiraFilter): Promise<JiraItem[]> {
   const auth = jiraAuth(conn);
   const byKey = new Map<string, JiraItem>();
@@ -130,6 +142,21 @@ export async function fetchIssues(conn: Connection, filter: JiraFilter): Promise
       if (existing) existing.role = 'both';
       else byKey.set(raw.key, toJiraItem(raw, auth.baseUrl, 'reporter'));
     }
+  }
+
+  // Buscada sempre, inclusive quando o filtro é só responsável ou só relator:
+  // aprovar não é um papel seu na issue, e o filtro de papel não deveria
+  // esconder o que espera por você.
+  for (const raw of await search(auth, AWAITING_MY_APPROVAL)) {
+    const existing = byKey.get(raw.key);
+    // A issue que já veio pelo papel mantém o papel e ganha a marca. A que só
+    // aparece por aprovação não tem papel seu: nem responsável, nem relator.
+    // Entra com o valor neutro que o resto do módulo já usa nesse caso, para
+    // não afirmar um papel que não é seu — quem explica a presença dela na
+    // lista é a marca de aprovação, não o papel.
+    const item = existing ?? toJiraItem(raw, auth.baseUrl, 'assignee');
+    item.awaitingApproval = true;
+    byKey.set(raw.key, item);
   }
 
   return [...byKey.values()];

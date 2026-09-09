@@ -121,13 +121,15 @@ export function JiraPanel({ jira, watched, delivered, onChanged, loading = false
   const all = useMemo(() => jira.data ?? [], [jira.data]);
 
   // Uma issue com papel 'both' é genuinamente das duas naturezas: aparece
-  // tanto em "minhas" quanto em "relator".
+  // tanto em "minhas" quanto em "relator". O que espera pela sua aprovação
+  // atravessa o filtro: aprovar não é um dos papéis, e escondê-la ao recortar
+  // por responsável ou relator tiraria da tela justamente o que pede decisão.
   const visible = useMemo(
     () =>
       all.filter(
         (i) =>
           matchesQuery([i.key, i.summary], query) &&
-          (filter === 'both' || i.role === filter || i.role === 'both'),
+          (filter === 'both' || i.role === filter || i.role === 'both' || i.awaitingApproval),
       ),
     [all, query, filter],
   );
@@ -476,6 +478,11 @@ function JiraRow({
           </a>
           <span className="jira-summary">{issue.summary}</span>
           {showRole && eRelator && <span className="jira-role jira-role-rel">REL</span>}
+          {issue.awaitingApproval && (
+            <span className="jira-role jira-role-aprov" title="aguardando a sua aprovação">
+              APROV
+            </span>
+          )}
         </div>
         <div className="jira-meta">
           <span className={`jira-status jira-status-${issue.statusCategory}`}>

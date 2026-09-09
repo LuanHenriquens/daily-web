@@ -1264,6 +1264,13 @@ textarea.mail-reply-input {
   color: var(--warn);
 }
 
+/* Decisão pendente é a única marca que pede ação de quem olha, e por isso é a
+   que puxa mais atenção que os selos de papel. */
+.jira-role-aprov {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .jira-group-label {
   display: block;
   margin: var(--s4) 0 var(--s2);

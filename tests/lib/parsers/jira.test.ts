@@ -16,6 +16,7 @@ function issue(over: Partial<JiraItem>): JiraItem {
     url: 'https://x/ENG-1',
     parent: null,
     role: 'assignee',
+    awaitingApproval: false,
     kind: 'História',
     subtask: false,
     updatedAt: '2026-08-26T10:00:00.000Z',
