@@ -9,6 +9,25 @@ Only `main` is maintained; there are no release branches.
 ## [Unreleased]
 
 ### Added
+- A third tab, **Aprovados**, listing what you approved. There is no JQL
+  function for it: `myApproved()` and `myDecided()` do not exist,
+  `approvedBy(currentUser())` is rejected because the `approvals` field takes no
+  function with an argument, and `approved()` on its own answers "approved by
+  anyone" — it returns other people's decisions. What narrows it to you is the
+  transition out of the approval status having been yours, the same trick
+  **Entregues** already uses. Unlike every other query in the module, this one
+  names a status: without `FROM "Aprovação"`, an issue approved by someone else
+  joins the list the moment you touch its status, which was measured against the
+  Service Desk approval API — 8 of 9 correct without it, 7 of 7 with it. The
+  cost is known and deliberate: if the workflow renames that status, the tab
+  goes quiet.
+- **Entregues** and **Aprovados** can be read by day or by week. Both default to
+  today, as before, and a **7 dias** chip widens them. Both lists arrive already
+  covering the week with a mark on what falls in today, so switching the period
+  is a cut over what is already in memory rather than another round trip — and
+  the day boundary stays the one Jira uses (`startOfDay()`, in your profile's
+  timezone), not a date computed in the browser. The period belongs to both tabs
+  at once: the two lists answer the same question about two different events.
 - **Em aberto** also lists what is waiting for your approval. Until now the tab
   answered "what is assigned to or reported by me", which left out the requests
   that only need a decision from you — they belong to someone else and never

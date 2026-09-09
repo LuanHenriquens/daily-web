@@ -1,5 +1,5 @@
 import type { Connection } from '@/lib/vault/connections';
-import type { JiraItem, JiraRole, JiraStatusCategory } from '@/lib/types';
+import type { JiraDatedItem, JiraItem, JiraRole, JiraStatusCategory } from '@/lib/types';
 import type { JiraFilter } from '@/lib/parsers/jira';
 
 const TIMEOUT_MS = 20_000;
@@ -162,7 +162,25 @@ export async function fetchIssues(conn: Connection, filter: JiraFilter): Promise
   return [...byKey.values()];
 }
 
-// O que saiu das suas mãos hoje. Duas condições, unidas porque as instâncias
+// As duas janelas que o painel oferece. A lista buscada é sempre a maior, e a
+// menor serve só para marcar o que cabe no dia: trocar o período na tela é um
+// recorte do que já está em memória, não uma nova ida ao Jira. O corte do dia
+// continua sendo o do Jira (`startOfDay()`, no fuso do perfil), e não uma
+// conta de data feita no navegador, que divergiria do que a interface do
+// Atlassian mostra.
+const WEEK = 'startOfDay(-7d)';
+const TODAY = 'startOfDay()';
+
+/** Marca, na lista da semana, quem também apareceu na busca do dia. */
+function withToday(week: RawIssue[], today: RawIssue[], baseUrl: string): JiraDatedItem[] {
+  const doDia = new Set(today.map((issue) => issue.key));
+  return week.map((issue) => ({
+    ...toJiraItem(issue, baseUrl, 'assignee'),
+    today: doDia.has(issue.key),
+  }));
+}
+
+// O que saiu das suas mãos. Duas condições, unidas porque as instâncias
 // se comportam de formas diferentes:
 //
 //   - `status CHANGED BY currentUser() DURING (startOfDay(), now())` pega a
@@ -174,19 +192,48 @@ export async function fetchIssues(conn: Connection, filter: JiraFilter): Promise
 //
 // `statusCategory = Done` por fora descarta o que você fechou e alguém
 // reabriu depois: reaberto não é entregue.
-const DELIVERED_TODAY =
+const delivered = (desde: string) =>
   'statusCategory = Done AND (' +
-  'status CHANGED BY currentUser() DURING (startOfDay(), now())' +
-  ' OR (assignee = currentUser() AND resolved >= startOfDay())' +
+  `status CHANGED BY currentUser() DURING (${desde}, now())` +
+  ` OR (assignee = currentUser() AND resolved >= ${desde})` +
   ') ORDER BY updated DESC';
 
-/** Issues que este usuário encerrou hoje. O recorte do dia é o do Jira
- *  (`startOfDay()`), que usa o fuso do perfil de quem está autenticado —
- *  o mesmo que a pessoa vê na interface do Atlassian. */
-export async function fetchDeliveredToday(conn: Connection): Promise<JiraItem[]> {
+/** Issues que este usuário encerrou nos últimos sete dias, marcadas conforme
+ *  caiam ou não no dia de hoje. */
+export async function fetchDelivered(conn: Connection): Promise<JiraDatedItem[]> {
   const auth = jiraAuth(conn);
-  const raw = await search(auth, DELIVERED_TODAY);
-  return raw.map((issue) => toJiraItem(issue, auth.baseUrl, 'assignee'));
+  const [week, today] = await Promise.all([
+    search(auth, delivered(WEEK)),
+    search(auth, delivered(TODAY)),
+  ]);
+  return withToday(week, today, auth.baseUrl);
+}
+
+// O que você aprovou. Não há função JQL para isto: `myApproved()` e
+// `myDecided()` não existem, e `approvedBy(currentUser())` é recusada — o
+// campo `approvals` não aceita função com argumento. `approved()` sozinho
+// responde "aprovada por alguém", incluindo aprovações de outras pessoas.
+//
+// O que restringe a você é a transição de saída da aprovação ter sido sua.
+// Diferente das outras consultas deste módulo, esta cita o nome do status:
+// sem `FROM "Aprovação"`, uma issue aprovada por outra pessoa entra na lista
+// assim que você mexe no status dela — foi medido contra a API de aprovação,
+// e o nome é o que separa os dois casos. O preço é conhecido: se o workflow
+// renomear esse status, a lista esvazia em silêncio.
+const approved = (desde: string) =>
+  'approvals = approved() AND ' +
+  `status CHANGED FROM "Aprovação" BY currentUser() DURING (${desde}, now())` +
+  ' ORDER BY updated DESC';
+
+/** Issues que este usuário aprovou nos últimos sete dias, marcadas conforme
+ *  caiam ou não no dia de hoje. */
+export async function fetchApproved(conn: Connection): Promise<JiraDatedItem[]> {
+  const auth = jiraAuth(conn);
+  const [week, today] = await Promise.all([
+    search(auth, approved(WEEK)),
+    search(auth, approved(TODAY)),
+  ]);
+  return withToday(week, today, auth.baseUrl);
 }
 
 interface Myself {

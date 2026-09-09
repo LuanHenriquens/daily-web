@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach, vi } from 'vitest';
 import type { ComponentProps } from 'react';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { JiraPanel } from '@/components/JiraPanel';
-import type { JiraItem } from '@/lib/types';
+import type { JiraDatedItem, JiraItem } from '@/lib/types';
 
 /** As três listas do painel são obrigatórias; cada teste só quer falar de
  *  uma delas, então o resto vem vazio por padrão. */
@@ -12,6 +12,7 @@ function Panel(props: Partial<ComponentProps<typeof JiraPanel>>) {
       jira={{ data: [], error: null }}
       watched={{ data: [], error: null }}
       delivered={{ data: [], error: null }}
+      approved={{ data: [], error: null }}
       onChanged={() => {}}
       {...props}
     />
@@ -35,6 +36,10 @@ function issue(over: Partial<JiraItem>): JiraItem {
     dueDate: '',
     ...over,
   };
+}
+
+function dated(over: Partial<JiraDatedItem>): JiraDatedItem {
+  return { ...issue({}), today: true, ...over };
 }
 
 afterEach(() => {
@@ -416,8 +421,8 @@ describe('hierarquia expansível', () => {
 // As duas listas não são recortes uma da outra: "Em aberto" é o que ainda
 // pede trabalho e "Entregues" é o que saiu hoje.
 describe('aba Entregues', () => {
-  const entregue = (over: Partial<JiraItem> = {}) =>
-    issue({ statusCategory: 'done', status: 'Resolvido', ...over });
+  const entregue = (over: Partial<JiraDatedItem> = {}) =>
+    dated({ statusCategory: 'done', status: 'Resolvido', ...over });
 
   it('abre em "Em aberto" e não mostra as entregues', () => {
     render(
@@ -541,5 +546,88 @@ describe('aguardando a minha aprovação', () => {
 
     expect(screen.getByText('PDS-2138')).toBeInTheDocument();
     expect(screen.queryByText('A-1')).not.toBeInTheDocument();
+  });
+});
+
+describe('tab Aprovados', () => {
+  it('lista o que você aprovou', () => {
+    render(
+      <Panel approved={{ data: [dated({ key: 'PDS-2147', summary: 'Runbook' })], error: null }} />,
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /aprovados/i }));
+
+    expect(screen.getByText('PDS-2147')).toBeInTheDocument();
+  });
+
+  it('avisa quando não há nada aprovado no período', () => {
+    render(<Panel approved={{ data: [], error: null }} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /aprovados/i }));
+
+    expect(screen.getByText(/nenhuma issue aprovada/i)).toBeInTheDocument();
+  });
+
+  it('mostra o erro do Jira sem derrubar a tab', () => {
+    render(<Panel approved={{ data: null, error: 'Jira recusou o token' }} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /aprovados/i }));
+
+    expect(screen.getByText('Jira recusou o token')).toBeInTheDocument();
+  });
+});
+
+describe('período de entregues e aprovados', () => {
+  const listas = {
+    delivered: {
+      data: [dated({ key: 'A-HOJE' }), dated({ key: 'A-SEMANA', today: false })],
+      error: null,
+    },
+    approved: {
+      data: [dated({ key: 'B-HOJE' }), dated({ key: 'B-SEMANA', today: false })],
+      error: null,
+    },
+  };
+
+  it('começa em hoje, escondendo o resto da semana', () => {
+    render(<Panel {...listas} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /entregues/i }));
+
+    expect(screen.getByText('A-HOJE')).toBeInTheDocument();
+    expect(screen.queryByText('A-SEMANA')).not.toBeInTheDocument();
+  });
+
+  it('mostra a semana inteira ao trocar o período', () => {
+    render(<Panel {...listas} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /entregues/i }));
+    fireEvent.click(screen.getByRole('button', { name: /7 dias/i }));
+
+    expect(screen.getByText('A-HOJE')).toBeInTheDocument();
+    expect(screen.getByText('A-SEMANA')).toBeInTheDocument();
+  });
+
+  // O período é um só: trocar numa tab e achar o recorte antigo na outra faria
+  // as duas listas responderem a perguntas diferentes ao mesmo tempo.
+  it('vale para as duas tabs', () => {
+    render(<Panel {...listas} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /entregues/i }));
+    fireEvent.click(screen.getByRole('button', { name: /7 dias/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /aprovados/i }));
+
+    expect(screen.getByText('B-SEMANA')).toBeInTheDocument();
+  });
+
+  it('o contador da tab acompanha o período', () => {
+    render(<Panel {...listas} />);
+
+    expect(screen.getByRole('tab', { name: /entregues, 1/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /entregues/i }));
+    fireEvent.click(screen.getByRole('button', { name: /7 dias/i }));
+
+    expect(screen.getByRole('tab', { name: /entregues, 2/i })).toBeInTheDocument();
   });
 });

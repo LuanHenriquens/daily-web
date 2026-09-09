@@ -104,6 +104,14 @@ export interface JiraItem {
   dueDate: string;
 }
 
+/** Uma issue com a marca do recorte de tempo. As listas de entregues e de
+ *  aprovados cobrem sete dias; `today` diz quais delas caem no dia de hoje,
+ *  que é o recorte padrão do painel. A marca vem do Jira, não de uma conta de
+ *  data feita aqui. */
+export interface JiraDatedItem extends JiraItem {
+  today: boolean;
+}
+
 export interface SubTask {
   id: string;
   title: string;
@@ -195,9 +203,11 @@ export interface DashboardState {
   jira: PanelResult<JiraItem[]>;
   /** Issues que o usuário escolheu acompanhar, mesmo não sendo dele. */
   jiraWatched: PanelResult<JiraItem[]>;
-  /** Issues que o usuário encerrou hoje. Ficam de fora de `jira`, que só
-   *  lista o que ainda está aberto. */
-  jiraDelivered: PanelResult<JiraItem[]>;
+  /** Issues que o usuário encerrou nos últimos sete dias. Ficam de fora de
+   *  `jira`, que só lista o que ainda está aberto. */
+  jiraDelivered: PanelResult<JiraDatedItem[]>;
+  /** Issues que o usuário aprovou nos últimos sete dias. */
+  jiraApproved: PanelResult<JiraDatedItem[]>;
   tasks: PanelResult<TodoTask[]>;
   notifications: PanelResult<NotificationItem[]>;
   pomodoro: PomodoroState;

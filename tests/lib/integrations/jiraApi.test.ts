@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchDeliveredToday, fetchIssues, jiraBaseUrl } from '@/lib/integrations/jiraApi';
+import {
+  fetchApproved,
+  fetchDelivered,
+  fetchIssues,
+  jiraBaseUrl,
+} from '@/lib/integrations/jiraApi';
 import type { Connection } from '@/lib/vault/connections';
 
 const CONN = {
@@ -59,25 +64,32 @@ describe('jiraBaseUrl', () => {
   });
 });
 
-describe('fetchDeliveredToday', () => {
+describe('fetchDelivered', () => {
   // O nome do status final é livre por workflow — aqui é "Resolvido" e
   // "Fechado", em outra instância é "Done". Depender do nome quebraria fora
   // desta instância; a categoria e o histórico de transição, não.
   it('pergunta pelo que você encerrou hoje sem citar nome de status', async () => {
     const fetchMock = stubSearch([]);
-    await fetchDeliveredToday(CONN);
+    await fetchDelivered(CONN);
 
-    const jql = jqlOf(fetchMock);
+    const jql = jqlOf(fetchMock, 1);
     expect(jql).toContain('statusCategory = Done');
     expect(jql).toContain('status CHANGED BY currentUser() DURING (startOfDay(), now())');
     expect(jql).toContain('assignee = currentUser() AND resolved >= startOfDay()');
     expect(jql).not.toMatch(/Resolvido|Fechado|Done"/);
   });
 
-  it('faz uma só ida ao Jira', async () => {
+  // Duas janelas numa passada: a lista é a dos sete dias, e a segunda busca
+  // diz quais dessas caem em hoje. Assim trocar o período no painel não custa
+  // uma ida ao Jira, e o corte do dia continua sendo o do Jira.
+  it('pergunta pelas duas janelas, sete dias e hoje', async () => {
     const fetchMock = stubSearch([]);
-    await fetchDeliveredToday(CONN);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await fetchDelivered(CONN);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(jqlOf(fetchMock, 0)).toContain('startOfDay(-7d)');
+    expect(jqlOf(fetchMock, 1)).toContain('DURING (startOfDay(), now())');
+    expect(jqlOf(fetchMock, 1)).not.toContain('-7d');
   });
 
   it('traz a issue com a situação e o link de abrir', async () => {
@@ -94,7 +106,7 @@ describe('fetchDeliveredToday', () => {
       },
     ]);
 
-    const [item] = await fetchDeliveredToday(CONN);
+    const [item] = await fetchDelivered(CONN);
     expect(item.key).toBe('PDS-10');
     expect(item.statusCategory).toBe('done');
     expect(item.status).toBe('Resolvido');
@@ -156,5 +168,69 @@ describe('fetchIssues: aguardando a minha aprovação', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(jqlOf(fetchMock, 1)).toContain('approvals = myPending()');
+  });
+});
+
+describe('recorte por período', () => {
+  // A lista devolvida é a dos sete dias; `today` é o que o painel usa para
+  // mostrar só o dia sem voltar ao servidor.
+  it('marca como de hoje só o que veio na janela do dia', async () => {
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ issues: [issue('PDS-1'), issue('PDS-2')] }),
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ issues: [issue('PDS-2')] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const items = await fetchDelivered(CONN);
+
+    expect(items.map((i) => [i.key, i.today])).toEqual([
+      ['PDS-1', false],
+      ['PDS-2', true],
+    ]);
+  });
+});
+
+describe('fetchApproved', () => {
+  // Não existe função JQL para "aprovadas por mim": `myApproved()` e
+  // `approvedBy(currentUser())` são recusadas, e `approved()` sozinho traz o
+  // que qualquer pessoa aprovou. O que restringe a você é a transição de
+  // saída do status de aprovação ter sido sua.
+  it('cruza a aprovação com a transição feita por você', async () => {
+    const fetchMock = stubSearch([]);
+    await fetchApproved(CONN);
+
+    const jql = jqlOf(fetchMock);
+    expect(jql).toContain('approvals = approved()');
+    expect(jql).toContain('status CHANGED FROM "Aprovação" BY currentUser()');
+  });
+
+  it('pergunta pelas duas janelas, sete dias e hoje', async () => {
+    const fetchMock = stubSearch([]);
+    await fetchApproved(CONN);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(jqlOf(fetchMock, 0)).toContain('startOfDay(-7d)');
+    expect(jqlOf(fetchMock, 1)).toContain('DURING (startOfDay(), now())');
+  });
+
+  it('traz a issue com o link de abrir', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ issues: [issue('PDS-2147')] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const [item] = await fetchApproved(CONN);
+    expect(item.key).toBe('PDS-2147');
+    expect(item.url).toBe('https://acme.atlassian.net/browse/PDS-2147');
+    expect(item.today).toBe(true);
   });
 });

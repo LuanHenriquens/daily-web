@@ -127,20 +127,22 @@ async function buildState(userId: string, ciclo: symbol): Promise<DashboardState
 
   const watched = jiraConnection ? jiraWatchedKeys(userId) : [];
 
-  const [email, agenda, pulls, jira, tasks, mentions, jiraWatched, jiraDelivered] = await Promise.all([
-    has('email') ? mergeConnections(mailConnections, (c) => imap.listEnvelopes(c, EMAIL_LIMIT)) : OFF,
-    has('agenda')
-      ? mergeConnections(calendars, (c) => agendaSource.fetchAgenda(c, undefined, days))
-      : OFF,
-    pullsConnection ? panel(() => githubApi.fetchPulls(pullsConnection)) : OFF,
-    jiraConnection ? panel(() => jiraApi.fetchIssues(jiraConnection, JIRA_FILTER)) : OFF,
-    has('tasks') ? panel(() => fetchTasks(userId)) : OFF,
-    jiraConnection ? panel(() => getNotifications(userId, jiraConnection)) : OFF,
-    jiraConnection && watched.length > 0
-      ? panel(() => jiraApi.fetchByKeys(jiraConnection, watched))
-      : ({ data: [], error: null } as PanelResult<never[]>),
-    jiraConnection ? panel(() => jiraApi.fetchDeliveredToday(jiraConnection)) : OFF,
-  ]);
+  const [email, agenda, pulls, jira, tasks, mentions, jiraWatched, jiraDelivered, jiraApproved] =
+    await Promise.all([
+      has('email') ? mergeConnections(mailConnections, (c) => imap.listEnvelopes(c, EMAIL_LIMIT)) : OFF,
+      has('agenda')
+        ? mergeConnections(calendars, (c) => agendaSource.fetchAgenda(c, undefined, days))
+        : OFF,
+      pullsConnection ? panel(() => githubApi.fetchPulls(pullsConnection)) : OFF,
+      jiraConnection ? panel(() => jiraApi.fetchIssues(jiraConnection, JIRA_FILTER)) : OFF,
+      has('tasks') ? panel(() => fetchTasks(userId)) : OFF,
+      jiraConnection ? panel(() => getNotifications(userId, jiraConnection)) : OFF,
+      jiraConnection && watched.length > 0
+        ? panel(() => jiraApi.fetchByKeys(jiraConnection, watched))
+        : ({ data: [], error: null } as PanelResult<never[]>),
+      jiraConnection ? panel(() => jiraApi.fetchDelivered(jiraConnection)) : OFF,
+      jiraConnection ? panel(() => jiraApi.fetchApproved(jiraConnection)) : OFF,
+    ]);
 
   // O sino soma menção do Jira, pull request aberto e e-mail não lido. As
   // três já foram buscadas acima: o aviso é derivado, não é uma quarta ida.
@@ -161,6 +163,7 @@ async function buildState(userId: string, ciclo: symbol): Promise<DashboardState
     jira,
     jiraWatched,
     jiraDelivered,
+    jiraApproved,
     tasks,
     notifications,
     pomodoro: getPomodoroState(userId),

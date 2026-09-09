@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { NavArrowRight } from 'iconoir-react';
-import type { JiraItem, PanelResult } from '@/lib/types';
+import type { JiraDatedItem, JiraItem, PanelResult } from '@/lib/types';
 import type { ActiveFilter } from '@/lib/filters';
 import { matchesQuery } from '@/lib/filters';
 import {
@@ -32,22 +32,43 @@ const FILTER_LABEL: Record<Filter, string> = {
   reporter: 'Relator',
 };
 
-/** As duas listas do painel. Não são recortes da mesma coleção: "Em aberto"
- *  é o que ainda pede trabalho, "Entregues" é o que saiu hoje. */
-type Aba = 'abertas' | 'entregues';
+/** As três listas do painel. Não são recortes da mesma coleção: "Em aberto" é
+ *  o que ainda pede trabalho, "Entregues" é o que saiu das suas mãos e
+ *  "Aprovados" é o que passou por uma decisão sua. */
+type Aba = 'abertas' | 'entregues' | 'aprovados';
+
+/** O recorte de tempo das duas listas fechadas. As issues das duas já chegam
+ *  cobrindo a semana, com a marca de quais são de hoje, então trocar aqui não
+ *  vai ao servidor. */
+type Periodo = 'hoje' | 'semana';
+
+const PERIODO_LABEL: Record<Periodo, string> = {
+  hoje: 'Hoje',
+  semana: '7 dias',
+};
 
 interface Props {
   jira: PanelResult<JiraItem[]>;
   /** Issues acompanhadas por escolha, mesmo não sendo suas. */
   watched: PanelResult<JiraItem[]>;
-  /** Issues que você encerrou hoje. */
-  delivered: PanelResult<JiraItem[]>;
+  /** Issues que você encerrou nos últimos sete dias. */
+  delivered: PanelResult<JiraDatedItem[]>;
+  /** Issues que você aprovou nos últimos sete dias. */
+  approved: PanelResult<JiraDatedItem[]>;
   onChanged: () => void;
   loading?: boolean;
 }
 
-export function JiraPanel({ jira, watched, delivered, onChanged, loading = false }: Props) {
+export function JiraPanel({
+  jira,
+  watched,
+  delivered,
+  approved,
+  onChanged,
+  loading = false,
+}: Props) {
   const [aba, setAba] = useState<Aba>('abertas');
+  const [periodo, setPeriodo] = useState<Periodo>('hoje');
   const [novaChave, setNovaChave] = useState('');
   const [watchError, setWatchError] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -137,10 +158,20 @@ export function JiraPanel({ jira, watched, delivered, onChanged, loading = false
   const projects = useMemo(() => buildJiraTree(visible), [visible]);
   const situations = useMemo(() => groupByStatusCategory(visible), [visible]);
 
-  // Entregues repete a estrutura de "Em aberto": hierarquia, separada por
-  // projeto, para DAD e PDS não se misturarem só porque saíram no mesmo dia.
-  const entregues = useMemo(() => delivered.data ?? [], [delivered.data]);
+  // Entregues e Aprovados repetem a estrutura de "Em aberto": hierarquia,
+  // separada por projeto, para DAD e PDS não se misturarem só porque saíram no
+  // mesmo dia. O período recorta as duas ao mesmo tempo — são a mesma pergunta
+  // feita sobre dois acontecimentos.
+  const noPeriodo = useCallback(
+    (itens: JiraDatedItem[]) => (periodo === 'hoje' ? itens.filter((i) => i.today) : itens),
+    [periodo],
+  );
+
+  const entregues = useMemo(() => noPeriodo(delivered.data ?? []), [delivered.data, noPeriodo]);
   const entreguesProjects = useMemo(() => buildJiraTree(entregues), [entregues]);
+
+  const aprovados = useMemo(() => noPeriodo(approved.data ?? []), [approved.data, noPeriodo]);
+  const aprovadosProjects = useMemo(() => buildJiraTree(aprovados), [aprovados]);
 
   const activeFilters: ActiveFilter[] = [
     ...(query.trim() ? [{ id: 'query', label: `Busca: ${query.trim()}` }] : []),
@@ -174,8 +205,22 @@ export function JiraPanel({ jira, watched, delivered, onChanged, loading = false
         tabs={[
           { id: 'abertas', label: 'Em aberto', count: all.length },
           { id: 'entregues', label: 'Entregues', count: entregues.length },
+          { id: 'aprovados', label: 'Aprovados', count: aprovados.length },
         ]}
       />
+
+      {/* O período pertence às duas listas fechadas, e não a uma delas: ficar
+          fora do painel da aba evita duas barras iguais e mantém o recorte
+          visível ao trocar de aba. */}
+      {aba !== 'abertas' && (
+        <FilterBar label="Período">
+          {(Object.keys(PERIODO_LABEL) as Periodo[]).map((p) => (
+            <Chip key={p} active={periodo === p} onClick={() => setPeriodo(p)}>
+              {PERIODO_LABEL[p]}
+            </Chip>
+          ))}
+        </FilterBar>
+      )}
 
       {aba === 'entregues' && (
         <div id="jira-panel-entregues" role="tabpanel" aria-labelledby="jira-tab-entregues">
@@ -188,11 +233,45 @@ export function JiraPanel({ jira, watched, delivered, onChanged, loading = false
           {loading && entregues.length === 0 && <SkeletonRows count={3} />}
 
           {!loading && entregues.length === 0 && !delivered.error && (
-            <EmptyState message="Nenhuma issue entregue hoje." />
+            <EmptyState
+              message={
+                periodo === 'hoje'
+                  ? 'Nenhuma issue entregue hoje.'
+                  : 'Nenhuma issue entregue nos últimos 7 dias.'
+              }
+            />
           )}
 
           <JiraProjects
             groups={entreguesProjects}
+            expandidos={expandidos}
+            onAlternar={alternarRamo}
+          />
+        </div>
+      )}
+
+      {aba === 'aprovados' && (
+        <div id="jira-panel-aprovados" role="tabpanel" aria-labelledby="jira-tab-aprovados">
+          {approved.error && (
+            <p role="alert" className="panel-error">
+              {approved.error}
+            </p>
+          )}
+
+          {loading && aprovados.length === 0 && <SkeletonRows count={3} />}
+
+          {!loading && aprovados.length === 0 && !approved.error && (
+            <EmptyState
+              message={
+                periodo === 'hoje'
+                  ? 'Nenhuma issue aprovada hoje.'
+                  : 'Nenhuma issue aprovada nos últimos 7 dias.'
+              }
+            />
+          )}
+
+          <JiraProjects
+            groups={aprovadosProjects}
             expandidos={expandidos}
             onAlternar={alternarRamo}
           />
