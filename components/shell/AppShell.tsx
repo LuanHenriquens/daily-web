@@ -41,9 +41,10 @@ interface Props {
  * mobile header are flex siblings outside the single scroll container.
  */
 /**
- * On the rail the label is gone from the screen, so it has to be reachable some
- * other way: a tooltip on hover, and an sr-only label for anyone not hovering.
- * Expanded, the label is right there and a tooltip would just repeat it.
+ * Wherever a control shows only its glyph, the label has to be reachable some
+ * other way: a tooltip on hover, and an aria-label for anyone not hovering.
+ * Pass show={false} where the label is already on screen — a tooltip that
+ * repeats a visible label is noise.
  */
 function RailTooltip({
   show,
@@ -204,30 +205,31 @@ export function AppShell({ theme, density, sidebar, username, children }: Props)
           </div>
 
           {/* The only internal border in the sidebar. */}
-          <div className={cn('flex shrink-0 flex-col gap-1 border-t', collapsed ? 'p-2' : 'p-2.5')}>
-            {!collapsed && account}
-            <RailTooltip show={collapsed} label="Expandir menu  ⌘B">
+          <div
+            className={cn(
+              'flex shrink-0 border-t',
+              // Expanded, the two controls share one row: the toggle is an icon,
+              // and an icon does not need a row of its own. Collapsed, the rail
+              // has no width to share, so they stack.
+              collapsed ? 'flex-col gap-1 p-2' : 'items-center gap-1 p-2.5',
+            )}
+          >
+            {!collapsed && <div className="min-w-0 flex-1">{account}</div>}
+            {/* The label lives in the tooltip and in aria-label in both states:
+                the glyph plus the shortcut is the whole affordance. */}
+            <RailTooltip show label={collapsed ? 'Expandir menu  ⌘B' : 'Recolher menu  ⌘B'}>
               <Button
                 variant="ghost"
-                size={collapsed ? 'icon-sm' : 'sm'}
+                size="icon-sm"
                 onClick={toggleSidebar}
                 aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
                 aria-expanded={!collapsed}
-                className={cn(
-                  !collapsed && 'w-full justify-start gap-2 px-2',
-                  collapsed && 'mx-auto',
-                )}
+                className={cn('shrink-0', collapsed && 'mx-auto')}
               >
                 {collapsed ? (
-                  <PanelLeftOpen className="size-4 shrink-0 text-ink-dim" />
+                  <PanelLeftOpen className="size-4 text-ink-dim" />
                 ) : (
-                  <>
-                    <PanelLeftClose className="size-4 shrink-0 text-ink-dim" />
-                    <span className="min-w-0 flex-1 truncate text-left font-normal">Recolher</span>
-                    <kbd className="type-caption shrink-0 rounded-full border border-line px-1.5 py-0.5 text-ink-dim">
-                      ⌘B
-                    </kbd>
-                  </>
+                  <PanelLeftClose className="size-4 text-ink-dim" />
                 )}
               </Button>
             </RailTooltip>
