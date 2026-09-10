@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import GridLayout, { useContainerWidth, type Layout } from 'react-grid-layout';
+import { Button } from '@/components/ui/button';
+import { cardSurface } from '@/components/data/Panel';
+import { cn } from '@/lib/utils';
 import {
   GRID_COLUMNS,
   GRID_ROW_HEIGHT,
@@ -149,7 +152,7 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
     // coluna, na ordem em que estão dispostos.
     const ordenados = [...visible].sort((a, b) => a.y - b.y || a.x - b.x);
     return (
-      <div className="col">
+      <div className="flex flex-col gap-4">
         {ordenados.map((p) => panels.find((painel) => painel.id === p.i)?.node)}
       </div>
     );
@@ -157,30 +160,38 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
 
   return (
     <div ref={containerRef}>
-      <div className="grid-bar">
-        <p className={`grid-hint${arranging ? ' is-on' : ''}`} role="status">
+      {/* A control bar floats on the background: a card is for content. */}
+      <div className="flex items-center justify-between gap-4 pb-3">
+        <p
+          role="status"
+          className={cn(
+            'min-w-0 text-sm text-ink-dim transition-opacity duration-150 motion-reduce:transition-none',
+            arranging ? 'opacity-100' : 'opacity-0',
+          )}
+        >
           {arranging
             ? `Arraste para mover, puxe o canto para redimensionar. Salvar guarda para ${janela.largura} × ${janela.altura}.`
             : ''}
         </p>
         {arranging ? (
-          <div className="grid-bar-actions">
-            <button
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="default"
+              size="sm"
               disabled={salvando}
               onClick={() => void salvar()}
             >
               {salvando ? 'Salvando…' : 'Salvar para esta tela'}
-            </button>
-            <button type="button" className="btn" onClick={descartar}>
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={descartar}>
               Descartar
-            </button>
+            </Button>
           </div>
         ) : (
-          <button type="button" className="btn" onClick={() => setPinned(true)}>
+          <Button type="button" variant="outline" size="sm" onClick={() => setPinned(true)}>
             Organizar
-          </button>
+          </Button>
         )}
       </div>
 
@@ -209,10 +220,11 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
         {visible.map((p) => (
           <div
             key={p.i}
-            className="grid-panel"
+            data-slot="grid-panel"
+            className={cn(cardSurface, 'min-w-0 overflow-hidden')}
             data-grid={{ ...p, minW: MIN_PANEL_WIDTH, minH: MIN_PANEL_HEIGHT }}
           >
-            <div className="grid-panel-body">
+            <div className="h-full overflow-x-hidden overflow-y-auto p-5 [scrollbar-gutter:stable]">
               {panels.find((painel) => painel.id === p.i)?.node}
             </div>
           </div>

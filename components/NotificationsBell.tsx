@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import type { NotificationItem, NotificationSource, PanelResult } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { tabular } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 
 /** De onde o aviso veio, em uma palavra. O rótulo era fixo em "JIRA", que
  *  passou a mentir quando o sino ganhou pull request e e-mail. */
@@ -87,76 +91,107 @@ export function NotificationsBell({
   };
 
   return (
-    <div className="bell">
-      <button
+    <div className="relative">
+      <Button
         type="button"
-        className="btn"
+        variant="outline"
+        size="sm"
         aria-label={`notificações (${unreadCount} não lidas)`}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
         Notificações
-        {unreadCount > 0 && <span className="bell-badge">{unreadCount}</span>}
-      </button>
+        {unreadCount > 0 && (
+          <Badge className={cn('type-caption px-1.5 leading-none', tabular)}>{unreadCount}</Badge>
+        )}
+      </Button>
 
       {open && (
         <>
-          <div className="bell-scrim" onClick={() => setOpen(false)} />
-          <div className="bell-popover" role="dialog" aria-label="central de notificações">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="absolute top-[calc(100%+0.5rem)] right-0 z-50 max-h-[70vh] w-[min(460px,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-line-strong bg-glass-strong p-4 shadow-e4"
+            role="dialog"
+            aria-label="central de notificações"
+          >
             {/* Dispensar um a um custa um clique por aviso, e o sino chega a
                 60. O botão só existe quando há o que dispensar. */}
             {unreadCount > 0 && (
-              <div className="bell-head">
-                <span className="eyebrow">
+              <div className="mb-2 flex items-center justify-between gap-3 border-b border-line pb-3">
+                <span className="type-caption text-ink-dim">
                   {unreadCount === 1 ? '1 não lida' : `${unreadCount} não lidas`}
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="btn btn-ghost"
+                  variant="ghost"
+                  size="xs"
                   disabled={marcandoTodas}
                   onClick={() => void markAllRead()}
                 >
                   {marcandoTodas ? 'Marcando…' : 'Marcar todas como lidas'}
-                </button>
+                </Button>
               </div>
             )}
 
             {notifications.error && (
-              <p role="alert" className="panel-error">
+              <p
+                role="alert"
+                className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
+              >
                 {notifications.error}
               </p>
             )}
             {error && (
-              <p role="alert" className="panel-error">
+              <p
+                role="alert"
+                className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
+              >
                 {error}
               </p>
             )}
 
-            {items.length === 0 && <p className="empty">Nada por aqui.</p>}
+            {items.length === 0 && <p className="type-caption py-8 text-ink-dim">Nada por aqui.</p>}
 
             <ul>
               {items.map((item) => (
-                <li key={item.id} className={`bell-item${item.read ? ' is-read' : ''}`}>
+                <li
+                  key={item.id}
+                  className={cn(
+                    'flex flex-col gap-2 border-b border-line py-3 last:border-b-0',
+                    item.read && 'text-ink-dim',
+                  )}
+                >
                   {/* O aviso de e-mail não tem página para abrir: vira texto,
                       porque um href vazio recarregaria o dashboard. */}
                   {item.url ? (
-                    <a href={item.url} target="_blank" rel="noreferrer">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(
+                        'type-body block leading-snug hover:underline [overflow-wrap:anywhere]',
+                        item.read ? 'text-ink-dim' : 'text-ink',
+                      )}
+                    >
                       {item.title}
                     </a>
                   ) : (
-                    <span className="bell-item-title">{item.title}</span>
+                    <span className="type-body [overflow-wrap:anywhere]">{item.title}</span>
                   )}
-                  <div className="bell-item-foot">
-                    <span className="bell-source mono">{SOURCE_LABEL[item.source]}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="type-caption tracking-wider text-ink-dim">
+                      {SOURCE_LABEL[item.source]}
+                    </span>
                     {!item.read && (
-                      <button
+                      <Button
                         type="button"
-                        className="btn btn-ghost"
+                        variant="ghost"
+                        size="xs"
                         aria-label={`marcar ${item.title} como lida`}
                         onClick={() => void markRead(item)}
                       >
                         Marcar como lida
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </li>

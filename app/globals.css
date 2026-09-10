@@ -551,6 +551,71 @@
   }
 }
 
+/* ---------- grade arrastável ----------
+   Estas regras miram nomes de classe gerados pela react-grid-layout, que nenhum
+   utilitário alcança. É o único lugar do sistema que precisa de CSS escrito à mão,
+   e mesmo aqui a cor sai só dos tokens. */
+.dashboard-grid.is-arranging [data-slot='grid-panel'] {
+  outline: 1px dashed var(--line-strong);
+  outline-offset: 0.5rem;
+  cursor: grab;
+}
+
+.dashboard-grid.is-arranging [data-slot='grid-panel']:hover {
+  outline-color: var(--brand-edge);
+}
+
+/* Enquanto arrasta, o conteúdo não deve capturar o ponteiro nem rolar. */
+.dashboard-grid.is-arranging [data-slot='grid-panel'] > * {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.react-grid-item.react-draggable-dragging {
+  cursor: grabbing;
+  z-index: 3;
+}
+
+.react-grid-item.react-draggable-dragging [data-slot='grid-panel'] {
+  outline-color: var(--brand);
+  box-shadow: var(--elevation-5);
+}
+
+/* O retângulo que mostra onde o painel vai cair. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--brand-tint);
+  border-radius: var(--radius-xl);
+  opacity: 1;
+}
+
+/* A alça de redimensionar vem da biblioteca com uma seta cinza em PNG; esta é
+   desenhada com borda, para combinar com o resto. */
+.dashboard-grid .react-resizable-handle {
+  background: none;
+  width: 16px;
+  height: 16px;
+  right: 2px;
+  bottom: 2px;
+  opacity: 0;
+  transition: opacity 150ms var(--ease);
+}
+
+.dashboard-grid.is-arranging .react-resizable-handle {
+  opacity: 1;
+}
+
+.dashboard-grid .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--brand);
+  border-bottom: 2px solid var(--brand);
+  border-bottom-right-radius: 2px;
+}
+
 /* Compact density. OUTSIDE any @layer, on purpose: the cells carry utilities and a
    utility beats @layer by LAYER ORDER, not specificity. Inside any layer these rules
    apply nothing. Keep them last in the file. */

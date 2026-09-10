@@ -4,6 +4,9 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Settings } from 'iconoir-react';
 import type { PomodoroState } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { tabular } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 import { Clock } from './Clock';
 import { Pomodoro } from './Pomodoro';
 
@@ -38,21 +41,25 @@ export function NowBand({
   extra,
 }: Props) {
   return (
-    <header className="now">
-      <div className="now-main">
+    <header className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-line pt-10 pb-8">
+      <div className="flex flex-wrap items-end gap-10">
         <Clock />
         <Pomodoro pomodoro={pomodoro} onChanged={onChanged} />
       </div>
-      <div className="now-aside">
-        <span className="now-sync mono">{formatUpdatedAt(updatedAt)}</span>
-        <button type="button" className="btn" onClick={onRefresh} disabled={loading}>
+      <div className="flex items-center gap-3">
+        <span className={cn('type-caption text-ink-dim', tabular)}>
+          {formatUpdatedAt(updatedAt)}
+        </span>
+        <Button type="button" variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
           {loading ? 'Atualizando' : 'Atualizar'}
-        </button>
+        </Button>
         {extra}
         {bell}
-        <Link className="icon-btn" href="/config" aria-label="configuração">
-          <Settings width={16} height={16} />
-        </Link>
+        <Button asChild variant="ghost" size="icon-sm">
+          <Link href="/config" aria-label="configuração">
+            <Settings width={16} height={16} />
+          </Link>
+        </Button>
       </div>
     </header>
   );

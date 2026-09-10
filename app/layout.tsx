@@ -22,9 +22,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // The one place a literal colour is unavoidable: this is a meta tag the browser
+  // chrome reads, and a custom property cannot reach it. Both values are the
+  // computed --mesh-base of their theme; change them when that token changes.
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f7f9' },
-    { media: '(prefers-color-scheme: dark)', color: '#121114' },
+    { media: '(prefers-color-scheme: light)', color: '#f9fafd' },
+    { media: '(prefers-color-scheme: dark)', color: '#08080a' },
   ],
   // A app é um painel, não um documento: dar zoom horizontal só quebraria as
   // colunas, mas o zoom de acessibilidade continua liberado.
