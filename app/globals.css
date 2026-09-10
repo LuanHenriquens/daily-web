@@ -595,6 +595,37 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Tailwind v4's preflight leaves buttons on the arrow cursor, unlike v3. On a
+     dashboard where nearly every control is a button, that reads as "not
+     clickable" on almost everything. Fixed here rather than per component, so a
+     control added tomorrow cannot forget it — and in @layer base, so a call site
+     that genuinely wants another cursor can still say so with a utility. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='checkbox'],
+  [role='radio'],
+  [role='switch'],
+  [role='tab'],
+  [role='option'],
+  select:not(:disabled),
+  summary,
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  label:has(> input[type='checkbox']:not(:disabled)),
+  label:has(> input[type='radio']:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  /* A disabled control that keeps the arrow gives no reason for the click that
+     did nothing. */
+  button:disabled,
+  select:disabled,
+  textarea:disabled,
+  input:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
   /* One cut for the whole product, in one place, instead of every component
      remembering its own fallback. */
   @media (prefers-reduced-motion: reduce) {

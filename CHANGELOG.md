@@ -58,6 +58,12 @@ Only `main` is maintained; there are no release branches.
   on reload, and each item keeps its label in a tooltip and for screen readers.
 
 ### Fixed
+- The pointer cursor is back on everything clickable. Tailwind v4's preflight
+  leaves buttons on the arrow, unlike v3, and on a dashboard where nearly every
+  control is a button that reads as "not clickable" on almost everything. It is
+  set once in the base layer rather than per component, so a control added
+  tomorrow cannot forget it, and a disabled control now shows `not-allowed`
+  instead of giving no reason for the click that did nothing.
 - Deleting anything asks in an app dialog instead of the browser's own. The
   native one cannot be styled, cannot be reached from the keyboard beyond its
   two buttons, blocks the whole tab, and on some platforms is suppressed
