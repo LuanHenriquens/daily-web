@@ -128,9 +128,7 @@ export function AgendaPanel({ agenda, days, onChanged, loading = false }: Props)
 
       {[...groups.entries()].map(([date, items]) => (
         <div key={date} className="mb-5 last:mb-0">
-          <h3 className="type-caption mb-2 block text-ink-dim">
-            {relativeDayLabel(date)}
-          </h3>
+          <h3 className="type-caption mb-2 block text-ink-dim">{relativeDayLabel(date)}</h3>
           <ul className="text-sm">
             {items.map((item, i) => (
               <li
@@ -138,7 +136,9 @@ export function AgendaPanel({ agenda, days, onChanged, loading = false }: Props)
                 className="flex items-baseline gap-3 border-b border-line-soft px-2 py-2 transition-colors duration-100 ease-brand even:bg-muted/25 last:border-b-0 hover:bg-brand-tint motion-reduce:transition-none"
               >
                 <span className={`w-[5ch] shrink-0 text-ink ${tabular}`}>{item.time || 'dia'}</span>
-                <span className="min-w-0 flex-1 truncate text-ink-mid">{item.title || EM_DASH}</span>
+                <span className="min-w-0 flex-1 truncate text-ink-mid">
+                  {item.title || EM_DASH}
+                </span>
                 {multiplasAgendas && item.accountLabel && (
                   <span className="shrink-0 rounded-full border border-line-strong bg-neutral-tint px-2 py-0.5 type-caption text-ink-dim">
                     {item.accountLabel}
@@ -149,8 +149,6 @@ export function AgendaPanel({ agenda, days, onChanged, loading = false }: Props)
           </ul>
         </div>
       ))}
-
     </Section>
   );
 }
-

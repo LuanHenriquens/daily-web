@@ -28,9 +28,7 @@ export function LayoutPanel() {
           .then((r) => (r.ok ? r.json() : null))
           .then((padraoDoServidor) => {
             if (cancelado || !padraoDoServidor) return;
-            setPadrao(
-              JSON.stringify(estado.layout) === JSON.stringify(padraoDoServidor.layout),
-            );
+            setPadrao(JSON.stringify(estado.layout) === JSON.stringify(padraoDoServidor.layout));
           });
       })
       .catch(() => {});
@@ -62,13 +60,11 @@ export function LayoutPanel() {
         redimensioná-los pelo canto. Clique em <strong>Concluir</strong> quando terminar.
       </p>
 
-      {erro && (
-        <PanelError>
-          {erro}
-        </PanelError>
-      )}
+      {erro && <PanelError>{erro}</PanelError>}
 
-      {padrao === true && <p className="type-caption py-6 text-ink-dim">Os painéis estão na disposição padrão.</p>}
+      {padrao === true && (
+        <p className="type-caption py-6 text-ink-dim">Os painéis estão na disposição padrão.</p>
+      )}
 
       {padrao === false && (
         <Button

@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { Trash } from 'iconoir-react';
 import type { Note } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
@@ -191,9 +193,12 @@ export function NotesPanel() {
       eyebrow="Notas rápidas"
       count={notes.length > 0 ? String(notes.length) : undefined}
       actions={
-        <Button type="button" variant="outline" size="sm" onClick={() => void criar()}>
-          Nova nota
-        </Button>
+        <IconAction
+          variant="outline"
+          label="Nova nota"
+          onClick={() => void criar()}
+          icon={<Plus className="size-4" />}
+        />
       }
     >
       {erro && <PanelError>{erro}</PanelError>}

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import type { PanelResult, PullRequestItem, PullsDigest } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
 import { groupByRepo, repoUrl, type RepoGroup } from '@/lib/integrations/githubApi';
@@ -63,7 +65,8 @@ function RepoBlock({ group }: { group: RepoGroup }) {
       {group.issues.length > 0 && (
         <div className="my-3 ml-4">
           <h4 className="type-caption mb-1 text-ink-dim">
-            Issues <span className={`font-normal normal-case ${tabular}`}>{group.issues.length}</span>
+            Issues{' '}
+            <span className={`font-normal normal-case ${tabular}`}>{group.issues.length}</span>
           </h4>
           <ul className="text-sm">
             {group.issues.map((item) => (
@@ -209,9 +212,12 @@ export function PullsPanel({ pulls, className, onChanged, loading = false }: Pro
                 if (e.key === 'Enter') void addRepo();
               }}
             />
-            <Button type="button" variant="outline" size="sm" onClick={() => void addRepo()}>
-              Adicionar
-            </Button>
+            <IconAction
+              variant="outline"
+              label="Adicionar repositório"
+              onClick={() => void addRepo()}
+              icon={<Plus className="size-4" />}
+            />
           </div>
           {reposError && <PanelError>{reposError}</PanelError>}
         </details>

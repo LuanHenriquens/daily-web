@@ -117,11 +117,7 @@ export function TaskFormModal({ task, onClose, onSaved }: Props) {
 
         <label className="flex flex-col gap-2 text-sm text-ink-mid">
           Vencimento
-          <Input
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-            placeholder="hoje 14:30"
-          />
+          <Input value={due} onChange={(e) => setDue(e.target.value)} placeholder="hoje 14:30" />
           <span className="type-caption text-ink-dim">
             hoje, amanhã, +3d, AAAA-MM-DD — hora opcional no fim
           </span>

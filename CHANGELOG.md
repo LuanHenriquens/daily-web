@@ -45,8 +45,11 @@ Only `main` is maintained; there are no release branches.
   that is dense on purpose. Frame padding and vertical rhythm tighten with it.
 - Controls whose glyph says it all drop their label: the bell with its count in
   a round badge, refresh as a spinner that actually spins while it works, the
-  pomodoro's play and pause, a broom to reset it, and the mail batch bar's mark,
-  move and delete. Dropping a label is a space decision and must not become a
+  pomodoro's play and pause, a broom to reset it, the mail batch bar's mark,
+  move and delete, a plus for every add (note, task, subtask, repository,
+  watched issue), a pencil and a bin on a connection, a key to change a
+  password, checks to mark notifications read, and the grid's arrange and
+  discard. Dropping a label is a space decision and must not become a
   meaning one, so every one of them keeps its words in a tooltip and in its
   accessible name — a shared component makes that the only way to build one.
 - The sidebar collapses to a 56px icon rail on Cmd+B or from its own control,

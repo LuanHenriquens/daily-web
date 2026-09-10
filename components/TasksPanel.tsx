@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { NavArrowRight } from 'iconoir-react';
 import type { PanelResult, TaskPriority, TodoTask } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
@@ -30,7 +32,8 @@ const caret =
 const addToggle =
   'inline-flex size-[18px] shrink-0 items-center justify-center rounded-md leading-none text-ink-dim transition-colors duration-100 ease-brand hover:bg-muted hover:text-ink aria-expanded:text-brand motion-reduce:transition-none';
 
-const flagPill = 'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 type-caption';
+const flagPill =
+  'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 type-caption';
 const neutralFlag = 'border-line-strong bg-neutral-tint text-ink-dim';
 
 /**
@@ -102,11 +105,14 @@ function SubtaskList({
   const toggleSubtask = async (subtaskId: string, completed: boolean) => {
     onSubtaskChanged(task.id, subtaskId, completed);
 
-    const res = await fetch(`/api/tasks/${encodeURIComponent(task.id)}/subtasks/${encodeURIComponent(subtaskId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed }),
-    });
+    const res = await fetch(
+      `/api/tasks/${encodeURIComponent(task.id)}/subtasks/${encodeURIComponent(subtaskId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed }),
+      },
+    );
     if (!res.ok) {
       onError(await readErrorMessage(res, 'Falha ao atualizar subtarefa'));
       onChanged();
@@ -130,7 +136,10 @@ function SubtaskList({
   };
 
   const removeSubtask = async (subtaskId: string) => {
-    const res = await fetch(`/api/tasks/${encodeURIComponent(task.id)}/subtasks/${encodeURIComponent(subtaskId)}`, { method: 'DELETE' });
+    const res = await fetch(
+      `/api/tasks/${encodeURIComponent(task.id)}/subtasks/${encodeURIComponent(subtaskId)}`,
+      { method: 'DELETE' },
+    );
     if (!res.ok) {
       onError(await readErrorMessage(res, 'Falha ao apagar subtarefa'));
       return;
@@ -184,9 +193,12 @@ function SubtaskList({
             aria-label={`nova subtarefa de ${task.title}`}
             autoFocus
           />
-          <Button type="button" variant="outline" onClick={() => void addSubtask()}>
-            Adicionar
-          </Button>
+          <IconAction
+            variant="outline"
+            label="Adicionar subtarefa"
+            onClick={() => void addSubtask()}
+            icon={<Plus className="size-4" />}
+          />
         </div>
       )}
     </div>
@@ -317,17 +329,31 @@ export function TasksPanel({
       eyebrow="Tarefas"
       count={activeFilters.length > 0 ? `${visibleCount} de ${all.length}` : undefined}
       actions={
-        <Button type="button" size="sm" onClick={() => setEditing('new')}>
-          Nova tarefa
-        </Button>
+        <IconAction
+          variant="default"
+          label="Nova tarefa"
+          onClick={() => setEditing('new')}
+          icon={<Plus className="size-4" />}
+        />
       }
     >
       <FilterBar label="Filtrar tarefas">
-        <SearchInput value={query} onChange={setQuery} label="buscar tarefas" placeholder="título" />
-        <Chip active={priority === 'high'} onClick={() => setPriority(priority === 'high' ? 'all' : 'high')}>
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          label="buscar tarefas"
+          placeholder="título"
+        />
+        <Chip
+          active={priority === 'high'}
+          onClick={() => setPriority(priority === 'high' ? 'all' : 'high')}
+        >
           Alta
         </Chip>
-        <Chip active={priority === 'low'} onClick={() => setPriority(priority === 'low' ? 'all' : 'low')}>
+        <Chip
+          active={priority === 'low'}
+          onClick={() => setPriority(priority === 'low' ? 'all' : 'low')}
+        >
           Baixa
         </Chip>
         <Chip active={showCompleted} onClick={() => setShowCompleted((v) => !v)}>
@@ -346,16 +372,8 @@ export function TasksPanel({
 
       <ActiveFilters filters={activeFilters} onRemove={clearFilter} onClearAll={clearAll} />
 
-      {tasks.error && (
-        <PanelError>
-          {tasks.error}
-        </PanelError>
-      )}
-      {actionError && (
-        <PanelError>
-          {actionError}
-        </PanelError>
-      )}
+      {tasks.error && <PanelError>{tasks.error}</PanelError>}
+      {actionError && <PanelError>{actionError}</PanelError>}
 
       {loading && all.length === 0 && <SkeletonRows count={5} />}
 

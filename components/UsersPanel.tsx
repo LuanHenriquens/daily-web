@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { KeyRound } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { Trash } from 'iconoir-react';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/data/ConfirmDialog';
@@ -171,17 +173,16 @@ export function UsersPanel() {
                     {user.isAdmin ? 'admin' : 'usuário'}
                   </span>
                 </span>
-                <Button
-                  type="button"
+                <IconAction
                   variant="outline"
-                  size="sm"
+                  label="Trocar senha"
+                  aria-expanded={resetFor === user.username}
                   onClick={() => {
                     setResetFor(resetFor === user.username ? null : user.username);
                     setResetPassword('');
                   }}
-                >
-                  Trocar senha
-                </Button>
+                  icon={<KeyRound className="size-4" />}
+                />
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"

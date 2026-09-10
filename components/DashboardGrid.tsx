@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { LayoutGrid, X } from 'lucide-react';
 import { IconAction } from '@/components/data/IconAction';
 import type { ReactNode } from 'react';
 import GridLayout, { useContainerWidth, type Layout } from 'react-grid-layout';
@@ -194,9 +194,12 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
             />
           </div>
         ) : (
-          <Button type="button" variant="outline" size="sm" onClick={() => setPinned(true)}>
-            Organizar
-          </Button>
+          <IconAction
+            variant="outline"
+            label="Organizar"
+            onClick={() => setPinned(true)}
+            icon={<LayoutGrid className="size-4" />}
+          />
         )}
       </div>
 

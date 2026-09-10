@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { Plus, X } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { NavArrowRight } from 'iconoir-react';
 import type { JiraDatedItem, JiraItem, JiraStatusCategory, PanelResult } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
@@ -368,14 +370,14 @@ export function JiraPanel({
                   if (e.key === 'Enter') void acompanhar();
                 }}
               />
-              <Button
-                type="button"
+              <IconAction
                 variant="outline"
+                size="icon"
+                label={salvando ? 'Buscando…' : 'Acompanhar issue'}
                 disabled={salvando || novaChave.trim().length === 0}
                 onClick={() => void acompanhar()}
-              >
-                {salvando ? 'Buscando…' : 'Acompanhar'}
-              </Button>
+                icon={<Plus className={cn('size-4', salvando && 'animate-pulse')} />}
+              />
             </div>
 
             {watchError && <PanelError>{watchError}</PanelError>}
@@ -425,16 +427,12 @@ export function JiraPanel({
                       )}
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
+                  <IconAction
                     className="shrink-0 text-ink-dim hover:bg-danger-tint hover:text-danger"
-                    aria-label={`parar de acompanhar ${issue.key}`}
+                    label={`parar de acompanhar ${issue.key}`}
                     onClick={() => void parar(issue.key)}
-                  >
-                    ×
-                  </Button>
+                    icon={<X className="size-4" />}
+                  />
                 </li>
               ))}
             </ul>

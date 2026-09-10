@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { CheckCircle, WarningCircle } from 'iconoir-react';
 import {
   MODULES,
@@ -435,14 +437,12 @@ export function IntegrationsPanel() {
                           {testing === conn.id ? 'Testando…' : 'Testar'}
                         </Button>
                         {conn.visible.provider !== 'google' && (
-                          <Button
-                            type="button"
+                          <IconAction
                             variant="outline"
-                            size="sm"
+                            label="Editar"
                             onClick={() => startEdit(conn)}
-                          >
-                            Editar
-                          </Button>
+                            icon={<Pencil className="size-4" />}
+                          />
                         )}
                         {conn.visible.provider === 'google' && (
                           <Button
@@ -454,15 +454,13 @@ export function IntegrationsPanel() {
                             Escolher agendas
                           </Button>
                         )}
-                        <Button
-                          type="button"
+                        <IconAction
                           variant="outline"
-                          size="sm"
+                          label="Remover"
                           className="text-danger hover:border-danger/40 hover:text-danger"
                           onClick={() => void remove(conn)}
-                        >
-                          Remover
-                        </Button>
+                          icon={<Trash2 className="size-4" />}
+                        />
                       </div>
 
                       {calendars[conn.id] && (

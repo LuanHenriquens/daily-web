@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useLayoutEffect, useRef } from 'react';
+import { Check, CheckCheck } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { NotificationItem, NotificationSource, PanelResult } from '@/lib/types';
 import { Bell } from 'lucide-react';
@@ -158,15 +159,13 @@ export function NotificationsBell({
                   <span className="type-caption text-ink-dim">
                     {unreadCount === 1 ? '1 não lida' : `${unreadCount} não lidas`}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
+                  <IconAction
+                    size="icon-xs"
+                    label={marcandoTodas ? 'Marcando…' : 'Marcar todas como lidas'}
                     disabled={marcandoTodas}
                     onClick={() => void markAllRead()}
-                  >
-                    {marcandoTodas ? 'Marcando…' : 'Marcar todas como lidas'}
-                  </Button>
+                    icon={<CheckCheck className={cn('size-4', marcandoTodas && 'animate-pulse')} />}
+                  />
                 </div>
               )}
 
@@ -222,15 +221,12 @@ export function NotificationsBell({
                         {SOURCE_LABEL[item.source]}
                       </span>
                       {!item.read && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="xs"
-                          aria-label={`marcar ${item.title} como lida`}
+                        <IconAction
+                          size="icon-xs"
+                          label={`marcar ${item.title} como lida`}
                           onClick={() => void markRead(item)}
-                        >
-                          Marcar como lida
-                        </Button>
+                          icon={<Check className="size-4" />}
+                        />
                       )}
                     </div>
                   </li>
