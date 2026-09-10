@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { NotificationItem, NotificationSource, PanelResult } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,8 +91,32 @@ export function NotificationsBell({
     }
   };
 
+  // O painel é levado para o body por portal. Sem isso ele fica preso ao
+  // contexto de empilhamento do <main>, que tem overflow-y-auto e vizinhos com
+  // backdrop-filter: o menu era recortado e pintado por baixo do conteúdo,
+  // e nenhum z-index resolve isso de dentro.
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const medir = () => {
+      const r = anchorRef.current?.getBoundingClientRect();
+      if (r) setPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
+    };
+    medir();
+    window.addEventListener('resize', medir);
+    // O <main> é quem rola nesta moldura; sem ouvi-lo o painel fica para trás.
+    const scroller = anchorRef.current?.closest('main');
+    scroller?.addEventListener('scroll', medir, { passive: true });
+    return () => {
+      window.removeEventListener('resize', medir);
+      scroller?.removeEventListener('scroll', medir);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={anchorRef}>
       <Button
         type="button"
         variant="outline"
@@ -106,100 +131,105 @@ export function NotificationsBell({
         )}
       </Button>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div
-            className="absolute top-[calc(100%+0.5rem)] right-0 z-50 max-h-[70vh] w-[min(460px,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-line-strong bg-glass-strong p-4 shadow-e4"
-            role="dialog"
-            aria-label="central de notificações"
-          >
-            {/* Dispensar um a um custa um clique por aviso, e o sino chega a
+      {open &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div
+              style={pos ? { top: pos.top, right: pos.right } : undefined}
+              className="fixed z-50 max-h-[70vh] w-[min(460px,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-line-strong bg-glass-strong p-4 shadow-e4 backdrop-blur-xl backdrop-saturate-150"
+              role="dialog"
+              aria-label="central de notificações"
+            >
+              {/* Dispensar um a um custa um clique por aviso, e o sino chega a
                 60. O botão só existe quando há o que dispensar. */}
-            {unreadCount > 0 && (
-              <div className="mb-2 flex items-center justify-between gap-3 border-b border-line pb-3">
-                <span className="type-caption text-ink-dim">
-                  {unreadCount === 1 ? '1 não lida' : `${unreadCount} não lidas`}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  disabled={marcandoTodas}
-                  onClick={() => void markAllRead()}
+              {unreadCount > 0 && (
+                <div className="mb-2 flex items-center justify-between gap-3 border-b border-line pb-3">
+                  <span className="type-caption text-ink-dim">
+                    {unreadCount === 1 ? '1 não lida' : `${unreadCount} não lidas`}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    disabled={marcandoTodas}
+                    onClick={() => void markAllRead()}
+                  >
+                    {marcandoTodas ? 'Marcando…' : 'Marcar todas como lidas'}
+                  </Button>
+                </div>
+              )}
+
+              {notifications.error && (
+                <p
+                  role="alert"
+                  className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
                 >
-                  {marcandoTodas ? 'Marcando…' : 'Marcar todas como lidas'}
-                </Button>
-              </div>
-            )}
-
-            {notifications.error && (
-              <p
-                role="alert"
-                className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
-              >
-                {notifications.error}
-              </p>
-            )}
-            {error && (
-              <p
-                role="alert"
-                className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
-              >
-                {error}
-              </p>
-            )}
-
-            {items.length === 0 && <p className="type-caption py-8 text-ink-dim">Nada por aqui.</p>}
-
-            <ul>
-              {items.map((item) => (
-                <li
-                  key={item.id}
-                  className={cn(
-                    'flex flex-col gap-2 border-b border-line py-3 last:border-b-0',
-                    item.read && 'text-ink-dim',
-                  )}
+                  {notifications.error}
+                </p>
+              )}
+              {error && (
+                <p
+                  role="alert"
+                  className="type-caption my-2 rounded-r-md border-l-2 border-warning/40 bg-warning-tint p-3 text-ink-mid [overflow-wrap:anywhere]"
                 >
-                  {/* O aviso de e-mail não tem página para abrir: vira texto,
-                      porque um href vazio recarregaria o dashboard. */}
-                  {item.url ? (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={cn(
-                        'type-body block leading-snug hover:underline [overflow-wrap:anywhere]',
-                        item.read ? 'text-ink-dim' : 'text-ink',
-                      )}
-                    >
-                      {item.title}
-                    </a>
-                  ) : (
-                    <span className="type-body [overflow-wrap:anywhere]">{item.title}</span>
-                  )}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="type-caption tracking-wider text-ink-dim">
-                      {SOURCE_LABEL[item.source]}
-                    </span>
-                    {!item.read && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="xs"
-                        aria-label={`marcar ${item.title} como lida`}
-                        onClick={() => void markRead(item)}
-                      >
-                        Marcar como lida
-                      </Button>
+                  {error}
+                </p>
+              )}
+
+              {items.length === 0 && (
+                <p className="type-caption py-8 text-ink-dim">Nada por aqui.</p>
+              )}
+
+              <ul>
+                {items.map((item) => (
+                  <li
+                    key={item.id}
+                    className={cn(
+                      'flex flex-col gap-2 border-b border-line py-3 last:border-b-0',
+                      item.read && 'text-ink-dim',
                     )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
+                  >
+                    {/* O aviso de e-mail não tem página para abrir: vira texto,
+                      porque um href vazio recarregaria o dashboard. */}
+                    {item.url ? (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn(
+                          'type-body block leading-snug hover:underline [overflow-wrap:anywhere]',
+                          item.read ? 'text-ink-dim' : 'text-ink',
+                        )}
+                      >
+                        {item.title}
+                      </a>
+                    ) : (
+                      <span className="type-body [overflow-wrap:anywhere]">{item.title}</span>
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="type-caption tracking-wider text-ink-dim">
+                        {SOURCE_LABEL[item.source]}
+                      </span>
+                      {!item.read && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          aria-label={`marcar ${item.title} como lida`}
+                          onClick={() => void markRead(item)}
+                        >
+                          Marcar como lida
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>,
+          document.body,
+        )}
     </div>
   );
 }

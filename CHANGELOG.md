@@ -40,8 +40,26 @@ Only `main` is maintained; there are no release branches.
   no wrong-theme flash on first paint.
 - A display density setting beside it, comfortable or compact, changing vertical
   rhythm only: a dense screen needs more visible lines, not smaller type.
+- The sidebar collapses to a 56px icon rail on Cmd+B or from its own control,
+  which gives a vertical monitor back 184px of width. The choice rides a cookie
+  the server reads during render, so a collapsed rail never expands for a frame
+  on reload, and each item keeps its label in a tooltip and for screen readers.
 
 ### Fixed
+- A panel's frame no longer scrolls away with its rows. The card sat inside the
+  scroll container, so scrolling a long list carried the border and the rounded
+  corners off the top and the module stopped reading as a box. The card is now
+  the grid item itself, pinned to the module bounds, with the header fixed and
+  only the content moving under it.
+- The notification menu no longer paints under the page. It was positioned
+  inside `<main>`, which scrolls and sits among panels that carry a
+  backdrop-filter, and a backdrop-filter creates a stacking context no z-index
+  can climb out of. The panel is portalled to the body and positioned against
+  the trigger.
+- The Jira "Em aberto" tab stops breaking in a narrow module. Its meta line
+  wrapped mid-phrase, splitting "Em andamento" across two lines and stranding
+  the status glyph on its own. Each meta item is now indivisible and the row
+  wraps between them.
 - `.gitignore` anchors its SQLite pattern to `/data/`. Unanchored, `data/`
   matched any directory of that name at any depth, which silently kept
   `components/data/` out of both git and the CSS content scan — its utilities

@@ -14,12 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  applyDensity,
-  applyTheme,
-  type Density,
-  type ThemePreference,
-} from '@/lib/theme';
+import { applyDensity, applyTheme, type Density, type ThemePreference } from '@/lib/theme';
 
 const THEME_ICON = { system: Monitor, light: Sun, dark: Moon } as const;
 
@@ -38,6 +33,9 @@ interface Props {
   initialTheme: ThemePreference;
   initialDensity: Density;
   username: string | null;
+  /** On the collapsed rail there is no room for a name: the trigger becomes the
+   *  theme icon alone, with the name still reachable inside the menu. */
+  collapsed?: boolean;
 }
 
 /**
@@ -45,7 +43,7 @@ interface Props {
  * stamped. These handlers call the applier before the setter, so the element and
  * the state stay in step no matter which surface changed it.
  */
-export function AccountMenu({ initialTheme, initialDensity, username }: Props) {
+export function AccountMenu({ initialTheme, initialDensity, username, collapsed = false }: Props) {
   const router = useRouter();
   const [theme, setTheme] = useState<ThemePreference>(initialTheme);
   const [density, setDensity] = useState<Density>(initialDensity);
@@ -82,12 +80,21 @@ export function AccountMenu({ initialTheme, initialDensity, username }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 px-2">
+        <Button
+          variant="ghost"
+          size={collapsed ? 'icon-sm' : 'sm'}
+          aria-label={collapsed ? (username ?? 'Conta') : undefined}
+          className={collapsed ? 'mx-auto' : 'w-full justify-start gap-2 px-2'}
+        >
           <ThemeIcon className="size-4 shrink-0 text-ink-dim" />
-          <span className="min-w-0 flex-1 truncate text-left font-normal">
-            {username ?? 'Conta'}
-          </span>
-          <ChevronDown className="size-4 shrink-0 text-ink-dim" />
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1 truncate text-left font-normal">
+                {username ?? 'Conta'}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-ink-dim" />
+            </>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top" className="min-w-56">
@@ -108,10 +115,7 @@ export function AccountMenu({ initialTheme, initialDensity, username }: Props) {
         <DropdownMenuSeparator />
 
         <DropdownMenuLabel className="type-caption text-ink-dim">Densidade</DropdownMenuLabel>
-        <DropdownMenuRadioGroup
-          value={density}
-          onValueChange={(v) => chooseDensity(v as Density)}
-        >
+        <DropdownMenuRadioGroup value={density} onValueChange={(v) => chooseDensity(v as Density)}>
           {(['comfortable', 'compact'] as const).map((value) => (
             <DropdownMenuRadioItem key={value} value={value}>
               {DENSITY_LABEL[value]}

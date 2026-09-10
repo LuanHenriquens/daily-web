@@ -66,7 +66,7 @@ const STATUS_TONE: Record<JiraStatusCategory, { glyph: string; tone: string }> =
 function JiraStatus({ issue }: { issue: JiraItem }) {
   const { glyph, tone } = STATUS_TONE[issue.statusCategory];
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
       <span aria-hidden className={tone}>
         {glyph}
       </span>
@@ -277,11 +277,7 @@ export function JiraPanel({
 
       {aba === 'entregues' && (
         <div id="jira-panel-entregues" role="tabpanel" aria-labelledby="jira-tab-entregues">
-          {delivered.error && (
-            <PanelError>
-              {delivered.error}
-            </PanelError>
-          )}
+          {delivered.error && <PanelError>{delivered.error}</PanelError>}
 
           {loading && entregues.length === 0 && <SkeletonRows count={3} />}
 
@@ -305,11 +301,7 @@ export function JiraPanel({
 
       {aba === 'aprovados' && (
         <div id="jira-panel-aprovados" role="tabpanel" aria-labelledby="jira-tab-aprovados">
-          {approved.error && (
-            <PanelError>
-              {approved.error}
-            </PanelError>
-          )}
+          {approved.error && <PanelError>{approved.error}</PanelError>}
 
           {loading && aprovados.length === 0 && <SkeletonRows count={3} />}
 
@@ -334,7 +326,12 @@ export function JiraPanel({
       {aba === 'abertas' && (
         <div id="jira-panel-abertas" role="tabpanel" aria-labelledby="jira-tab-abertas">
           <FilterBar label="Filtrar issues">
-            <SearchInput value={query} onChange={setQuery} label="buscar issues" placeholder="chave ou resumo" />
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              label="buscar issues"
+              placeholder="chave ou resumo"
+            />
             {(Object.keys(FILTER_LABEL) as Filter[]).map((f) => (
               <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
                 {FILTER_LABEL[f]}
@@ -353,7 +350,10 @@ export function JiraPanel({
             <h3 className={groupLabel}>
               Acompanhando
               {acompanhadas.length > 0 && (
-                <span className={cn('font-normal text-ink-dim', tabular)}> {acompanhadas.length}</span>
+                <span className={cn('font-normal text-ink-dim', tabular)}>
+                  {' '}
+                  {acompanhadas.length}
+                </span>
               )}
             </h3>
 
@@ -378,16 +378,8 @@ export function JiraPanel({
               </Button>
             </div>
 
-            {watchError && (
-              <PanelError>
-                {watchError}
-              </PanelError>
-            )}
-            {watched.error && (
-              <PanelError>
-                {watched.error}
-              </PanelError>
-            )}
+            {watchError && <PanelError>{watchError}</PanelError>}
+            {watched.error && <PanelError>{watched.error}</PanelError>}
 
             {acompanhadas.length === 0 && !watchError && (
               <p className={emptyNote}>Nenhuma issue acompanhada.</p>
@@ -396,11 +388,16 @@ export function JiraPanel({
             <ul>
               {acompanhadas.map((issue) => (
                 <li key={issue.key} className={rowShell}>
-                  <span className="shrink-0 type-caption leading-6 text-ink-dim">{issueMarker(issue)}</span>
+                  <span className="shrink-0 type-caption leading-6 text-ink-dim">
+                    {issueMarker(issue)}
+                  </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <div className="flex min-w-0 items-baseline gap-3">
                       <a
-                        className={cn('shrink-0 font-mono text-sm text-brand hover:underline', focusRing)}
+                        className={cn(
+                          'shrink-0 font-mono text-sm text-brand hover:underline',
+                          focusRing,
+                        )}
                         href={issue.url}
                         target="_blank"
                         rel="noreferrer"
@@ -409,13 +406,20 @@ export function JiraPanel({
                       </a>
                       <span className="min-w-0 flex-1 truncate text-ink">{issue.summary}</span>
                     </div>
-                    <div className="flex items-center gap-3 type-caption text-ink-dim">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 type-caption text-ink-dim">
                       <JiraStatus issue={issue} />
                       {stalenessLabel(issue) && (
-                        <span className="text-warning">{stalenessLabel(issue)}</span>
+                        <span className="whitespace-nowrap text-warning">
+                          {stalenessLabel(issue)}
+                        </span>
                       )}
                       {issue.dueDate && dueLabel(issue.dueDate) && (
-                        <span className={isOverdue(issue.dueDate) ? 'is-overdue text-danger' : 'text-ink-dim'}>
+                        <span
+                          className={cn(
+                            'whitespace-nowrap',
+                            isOverdue(issue.dueDate) ? 'is-overdue text-danger' : 'text-ink-dim',
+                          )}
+                        >
                           {dueLabel(issue.dueDate)}
                         </span>
                       )}
@@ -436,15 +440,13 @@ export function JiraPanel({
             </ul>
           </div>
 
-          {jira.error && (
-            <PanelError>
-              {jira.error}
-            </PanelError>
-          )}
+          {jira.error && <PanelError>{jira.error}</PanelError>}
 
           {loading && all.length === 0 && <SkeletonRows count={5} />}
 
-          {!loading && all.length === 0 && !jira.error && <EmptyState title="Nenhuma issue atribuída." />}
+          {!loading && all.length === 0 && !jira.error && (
+            <EmptyState title="Nenhuma issue atribuída." />
+          )}
 
           {all.length > 0 && visible.length === 0 && (
             <EmptyState title="Nenhuma issue com esses filtros." />
@@ -456,7 +458,10 @@ export function JiraPanel({
               <div key={group.category} className="mt-5 first:mt-0">
                 <h3 className={groupLabel}>
                   {group.label}
-                  <span className={cn('font-normal text-ink-dim', tabular)}> {group.issues.length}</span>
+                  <span className={cn('font-normal text-ink-dim', tabular)}>
+                    {' '}
+                    {group.issues.length}
+                  </span>
                 </h3>
                 <ul>
                   {group.issues.map((issue) => (
@@ -626,24 +631,36 @@ function JiraRow({
           </a>
           <span className="min-w-0 flex-1 truncate text-ink">{issue.summary}</span>
           {showRole && eRelator && (
-            <span className={cn(roleBadge, 'border-line-strong bg-neutral-tint text-ink-dim')}>REL</span>
+            <span className={cn(roleBadge, 'border-line-strong bg-neutral-tint text-ink-dim')}>
+              REL
+            </span>
           )}
           {/* A pending decision is the only mark that asks something of the reader,
               so it is the one that pulls more attention than the role badge. */}
           {issue.awaitingApproval && (
             <span
-              className={cn(roleBadge, 'border-warning/45 bg-warning-tint font-semibold text-warning')}
+              className={cn(
+                roleBadge,
+                'border-warning/45 bg-warning-tint font-semibold text-warning',
+              )}
               title="aguardando a sua aprovação"
             >
               APROV
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 type-caption text-ink-dim">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 type-caption text-ink-dim">
           <JiraStatus issue={issue} />
-          {parado && <span className="text-warning">{parado}</span>}
+          {parado && <span className="whitespace-nowrap text-warning">{parado}</span>}
           {prazo && (
-            <span className={atrasado ? 'is-overdue text-danger' : 'text-ink-dim'}>{prazo}</span>
+            <span
+              className={cn(
+                'whitespace-nowrap',
+                atrasado ? 'is-overdue text-danger' : 'text-ink-dim',
+              )}
+            >
+              {prazo}
+            </span>
           )}
         </div>
       </div>
