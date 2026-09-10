@@ -55,7 +55,7 @@ export function Tabs({ label, id, tabs, active, onChange }: Props) {
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="section-count tabular"> {tab.count}</span>
+              <span className="section-count mono"> {tab.count}</span>
             )}
           </button>
         );

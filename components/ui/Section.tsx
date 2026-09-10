@@ -17,7 +17,7 @@ export function Section({ eyebrow, count, actions, className, children }: Props)
       <header className="section-head">
         <div className="section-title">
           <h2 className="eyebrow">{eyebrow}</h2>
-          {count && <span className="section-count tabular">{count}</span>}
+          {count && <span className="section-count mono">{count}</span>}
         </div>
         {actions && <div className="section-actions">{actions}</div>}
       </header>

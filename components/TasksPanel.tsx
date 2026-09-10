@@ -9,7 +9,6 @@ import { groupTasksByDueWindow } from '@/lib/taskGrouping';
 import type { TaskGroupKey } from '@/lib/taskGrouping';
 import { TaskFormModal } from './TaskFormModal';
 import { Section } from './ui/Section';
-import { GLYPH, StatusPill, type StatusTone } from './ui/Status';
 import { FilterBar } from './ui/FilterBar';
 import { SearchInput } from './ui/SearchInput';
 import { Chip } from './ui/Chip';
@@ -31,15 +30,6 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
   high: 'Alta',
   normal: 'Normal',
   low: 'Baixa',
-};
-
-/* Prioridade não é status, mas responde à mesma regra: a leitura não pode
-   depender só do matiz. "Normal" não desenha nada — o ruído de marcar o caso
-   comum é o que apaga o incomum. */
-const PRIORITY_TONE: Record<TaskPriority, { tone: StatusTone; glyph: string }> = {
-  high: { tone: 'warning', glyph: GLYPH.alert },
-  normal: { tone: 'neutral', glyph: GLYPH.idle },
-  low: { tone: 'neutral', glyph: GLYPH.idle },
 };
 
 async function readErrorMessage(res: Response, fallback: string): Promise<string> {
@@ -377,21 +367,18 @@ export function TasksPanel({
                     <span className="row-title">{task.title}</span>
                   </button>
                   {task.priority !== 'normal' && (
-                    <StatusPill
-                      tone={PRIORITY_TONE[task.priority].tone}
-                      glyph={PRIORITY_TONE[task.priority].glyph}
-                      label={PRIORITY_LABEL[task.priority]}
-                      className={`task-flag task-flag-${task.priority}`}
-                    />
+                    <span className={`task-flag task-flag-${task.priority}`}>
+                      {PRIORITY_LABEL[task.priority]}
+                    </span>
                   )}
                   {task.recur !== '' && (
-                    <span className="tag" title="tarefa recorrente">
+                    <span className="task-flag" title="tarefa recorrente">
                       repete
                     </span>
                   )}
-                  {task.due && <span className="task-due tabular">{formatDue(task.due, task.time)}</span>}
+                  {task.due && <span className="task-due mono">{formatDue(task.due, task.time)}</span>}
                   {task.subtasks.length > 0 && (
-                    <span className="task-due tabular" title="subtarefas concluídas">
+                    <span className="task-due mono" title="subtarefas concluídas">
                       {task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length}
                     </span>
                   )}

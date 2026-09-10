@@ -100,8 +100,8 @@ export function Pomodoro({ pomodoro, onChanged }: Props) {
       </div>
       <div className="now-pomo-info">
         <span className="now-pomo-phase">{isFocus ? 'foco' : 'descanso'}</span>
-        <span className="now-pomo-time tabular">{formatRemaining(remaining)}</span>
-        <span className="now-pomo-count tabular" title="focos concluídos">
+        <span className="now-pomo-time mono">{formatRemaining(remaining)}</span>
+        <span className="now-pomo-count mono" title="focos concluídos">
           {pomodoro.completedFocusCount} focos
         </span>
       </div>

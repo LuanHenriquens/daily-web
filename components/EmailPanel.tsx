@@ -334,7 +334,7 @@ export function EmailPanel({
   const actions =
     selected.size > 0 ? (
       <>
-        <span className="section-count tabular">{selected.size} selecionados</span>
+        <span className="section-count mono">{selected.size} selecionados</span>
         <button type="button" className="btn" onClick={() => void runBatch('read')}>
           Marcar lido
         </button>
@@ -478,7 +478,7 @@ export function EmailPanel({
                   </button>
                   {thread.messages.length > 1 && (
                     <span
-                      className="row-count tabular"
+                      className="row-count mono"
                       aria-label={
                         enviadas > 0
                           ? `${thread.messages.length} mensagens, ${enviadas} enviadas por você`
@@ -488,7 +488,7 @@ export function EmailPanel({
                       {thread.messages.length}
                     </span>
                   )}
-                  <span className="row-time tabular">{relativeTime(thread.lastDate)}</span>
+                  <span className="row-time mono">{relativeTime(thread.lastDate)}</span>
                   {mailboxes.length > 1 && (
                     <span className="row-tag">{thread.messages[0].accountLabel}</span>
                   )}
@@ -569,7 +569,7 @@ export function EmailPanel({
                             {m.mailbox === 'sent' && (
                               <span className="thread-sent">enviada</span>
                             )}
-                            <span className="thread-time tabular">{relativeTime(m.date)}</span>
+                            <span className="thread-time mono">{relativeTime(m.date)}</span>
                           </button>
                           {aberta && (
                             <EmailDetail

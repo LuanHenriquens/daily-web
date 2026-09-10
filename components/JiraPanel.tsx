@@ -16,7 +16,6 @@ import {
 } from '@/lib/parsers/jira';
 import type { JiraNode, JiraProjectGroup } from '@/lib/parsers/jira';
 import { Section } from './ui/Section';
-import { GLYPH, StatusPill, type StatusTone } from './ui/Status';
 import { Tabs } from './ui/Tabs';
 import { FilterBar } from './ui/FilterBar';
 import { SearchInput } from './ui/SearchInput';
@@ -58,23 +57,6 @@ interface Props {
   approved: PanelResult<JiraDatedItem[]>;
   onChanged: () => void;
   loading?: boolean;
-}
-
-
-/**
- * Jira's own status categories, mapped to the shared tone-and-glyph
- * vocabulary. "In flight" is info rather than the accent: a status that
- * followed the accent would change colour when the accent changed, with
- * nothing about the status having changed.
- */
-const STATUS_TONE: Record<string, { tone: StatusTone; glyph: string }> = {
-  new: { tone: 'neutral', glyph: GLYPH.idle },
-  indeterminate: { tone: 'info', glyph: GLYPH.moving },
-  done: { tone: 'success', glyph: GLYPH.live },
-};
-
-function statusTone(category: string): { tone: StatusTone; glyph: string } {
-  return STATUS_TONE[category] ?? { tone: 'neutral', glyph: GLYPH.idle };
 }
 
 export function JiraPanel({
@@ -318,7 +300,7 @@ export function JiraPanel({
             <h3 className="jira-group-label eyebrow">
               Acompanhando
               {acompanhadas.length > 0 && (
-                <span className="section-count tabular"> {acompanhadas.length}</span>
+                <span className="section-count mono"> {acompanhadas.length}</span>
               )}
             </h3>
 
@@ -370,12 +352,9 @@ export function JiraPanel({
                       <span className="jira-summary">{issue.summary}</span>
                     </div>
                     <div className="jira-meta">
-                      <StatusPill
-                        tone={statusTone(issue.statusCategory).tone}
-                        glyph={statusTone(issue.statusCategory).glyph}
-                        label={normalizeStatus(issue.status)}
-                        className={`jira-status jira-status-${issue.statusCategory}`}
-                      />
+                      <span className={`jira-status jira-status-${issue.statusCategory}`}>
+                        {normalizeStatus(issue.status)}
+                      </span>
                       {stalenessLabel(issue) && (
                         <span className="jira-stale">{stalenessLabel(issue)}</span>
                       )}
@@ -419,7 +398,7 @@ export function JiraPanel({
               <div key={group.category} className="jira-project">
                 <h3 className="jira-group-label eyebrow">
                   {group.label}
-                  <span className="section-count tabular"> {group.issues.length}</span>
+                  <span className="section-count mono"> {group.issues.length}</span>
                 </h3>
                 <ul>
                   {group.issues.map((issue) => (
@@ -462,7 +441,7 @@ function JiraProjects({
         <div key={group.project} className="jira-project">
           <h3 className="jira-group-label eyebrow">
             {group.project}
-            <span className="section-count tabular"> {group.count}</span>
+            <span className="section-count mono"> {group.count}</span>
           </h3>
           <ul>
             {group.roots.map((node) => (
@@ -585,12 +564,9 @@ function JiraRow({
           )}
         </div>
         <div className="jira-meta">
-          <StatusPill
-            tone={statusTone(issue.statusCategory).tone}
-            glyph={statusTone(issue.statusCategory).glyph}
-            label={normalizeStatus(issue.status)}
-            className={`jira-status jira-status-${issue.statusCategory}`}
-          />
+          <span className={`jira-status jira-status-${issue.statusCategory}`}>
+            {normalizeStatus(issue.status)}
+          </span>
           {parado && <span className="jira-stale">{parado}</span>}
           {prazo && <span className={atrasado ? 'jira-due is-overdue' : 'jira-due'}>{prazo}</span>}
         </div>
