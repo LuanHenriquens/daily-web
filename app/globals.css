@@ -385,15 +385,6 @@
   --color-glass-line: var(--glass-line);
   --color-glass-strong: var(--glass-strong);
 
-  --shadow-e1: var(--elevation-1);
-  --shadow-e2: var(--elevation-2);
-  --shadow-e3: var(--elevation-3);
-  --shadow-e4: var(--elevation-4);
-  --shadow-e5: var(--elevation-5);
-  --shadow-glow: var(--glow);
-  --shadow-button: var(--button-rim), var(--elevation-2);
-  --shadow-control: var(--control-rim), var(--elevation-2);
-
   --radius-sm: calc(var(--radius) - 2px); /* 10px */
   --radius-md: var(--radius); /* 12px */
   --radius-lg: calc(var(--radius) + 2px); /* 14px */
@@ -401,6 +392,73 @@
 
   --ease-brand: var(--ease);
   --ease-brand-in-out: var(--ease-in-out);
+}
+
+/* Elevation as @utility, NOT as @theme --shadow-* keys.
+   Two failures had to be avoided here, and only this shape avoids both.
+
+   Registering these as `--shadow-*` theme keys produces nothing: Tailwind builds
+   the utility by substituting a shadow colour into the value, and its parser
+   cannot handle a value mixing the `inset` keyword with several comma-separated
+   shadows. --tw-shadow is left unset and the whole list computes to transparent,
+   with a green build and every elevated surface silently flat.
+
+   Setting `box-shadow` directly does paint, but then it collides with the ring:
+   box-shadow is one property, so on an element carrying both an elevation and a
+   focus ring whichever declaration comes last erases the other — an input loses
+   its elevation at rest, and a button loses it while focused.
+
+   So these feed Tailwind's own composition instead, exactly as its native shadow
+   utilities do. Elevation and ring then stack rather than fight.
+   tailwind-merge already knows this group through lib/utils.ts, so a className
+   override still resolves by argument order. */
+@utility shadow-e1 {
+  --tw-shadow: var(--elevation-1);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-e2 {
+  --tw-shadow: var(--elevation-2);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-e3 {
+  --tw-shadow: var(--elevation-3);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-e4 {
+  --tw-shadow: var(--elevation-4);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-e5 {
+  --tw-shadow: var(--elevation-5);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-glow {
+  --tw-shadow: var(--glow);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-button {
+  --tw-shadow: var(--button-rim), var(--elevation-2);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+@utility shadow-control {
+  --tw-shadow: var(--control-rim), var(--elevation-2);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
 }
 
 /* Seven type roles. Each carries family, size, line-height, weight and tracking

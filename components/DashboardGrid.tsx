@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import GridLayout, { useContainerWidth, type Layout } from 'react-grid-layout';
 import { Button } from '@/components/ui/button';
-import { cardSurface } from '@/components/data/Panel';
 import { cn } from '@/lib/utils';
 import {
   GRID_COLUMNS,
@@ -221,10 +220,10 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
           <div
             key={p.i}
             data-slot="grid-panel"
-            className={cn(cardSurface, 'min-w-0 overflow-hidden')}
+            className="min-w-0 overflow-hidden rounded-xl"
             data-grid={{ ...p, minW: MIN_PANEL_WIDTH, minH: MIN_PANEL_HEIGHT }}
           >
-            <div className="h-full overflow-x-hidden overflow-y-auto p-5 [scrollbar-gutter:stable]">
+            <div className="h-full overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
               {panels.find((painel) => painel.id === p.i)?.node}
             </div>
           </div>
