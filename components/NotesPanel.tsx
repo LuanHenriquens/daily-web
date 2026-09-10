@@ -1,12 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { Trash } from 'iconoir-react';
 import type { Note } from '@/lib/types';
-import { Section } from './ui/Section';
-import { EmptyState } from './ui/EmptyState';
-import { Chip } from './ui/Chip';
+import { PanelError } from '@/components/data/PanelError';
+import { useConfirm } from '@/components/data/ConfirmDialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { EmptyState } from '@/components/data/EmptyState';
+import { focusRing } from '@/lib/theme';
+import { cn } from '@/lib/utils';
+import { Chip } from '@/components/ui/Chip';
 import { MarkdownEditor } from './MarkdownEditor';
+import { Section } from './ui/Section';
 
 /** Quanto o texto fica parado antes de subir. Curto o bastante para não se
  *  perder ao fechar a aba, longo o bastante para não gravar a cada tecla. */
@@ -15,6 +24,7 @@ const AUTOSAVE_MS = 700;
 type Estado = 'salvo' | 'salvando' | 'erro';
 
 export function NotesPanel() {
+  const { confirm, dialog } = useConfirm();
   const [notes, setNotes] = useState<Note[]>([]);
   const [ativa, setAtiva] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -30,26 +40,29 @@ export function NotesPanel() {
   // ar gravaria o texto na aba errada sem isto.
   const pendente = useRef<{ id: string; body: string } | null>(null);
 
-  const gravar = useCallback(async (id: string, patch: { title?: string; body?: string; markdown?: boolean }) => {
-    setEstado('salvando');
-    const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    });
+  const gravar = useCallback(
+    async (id: string, patch: { title?: string; body?: string; markdown?: boolean }) => {
+      setEstado('salvando');
+      const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setErro(data.error ?? 'Falha ao salvar a nota');
-      setEstado('erro');
-      return;
-    }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErro(data.error ?? 'Falha ao salvar a nota');
+        setEstado('erro');
+        return;
+      }
 
-    const { note } = (await res.json()) as { note: Note };
-    setErro(null);
-    setEstado('salvo');
-    setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, ...note } : n)));
-  }, []);
+      const { note } = (await res.json()) as { note: Note };
+      setErro(null);
+      setEstado('salvo');
+      setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, ...note } : n)));
+    },
+    [],
+  );
 
   /** Sobe o que estiver pendente agora, cancelando a espera. */
   const gravarPendente = useCallback(async () => {
@@ -140,7 +153,13 @@ export function NotesPanel() {
   };
 
   const apagar = async (note: Note) => {
-    if (!window.confirm(`Apagar a nota "${note.title || 'sem título'}"?`)) return;
+    const ok = await confirm({
+      title: 'Apagar a nota?',
+      description: `"${note.title || 'sem título'}" será removida. Isso não tem volta.`,
+      confirmLabel: 'Apagar',
+      destructive: true,
+    });
+    if (!ok) return;
     if (pendente.current?.id === note.id) {
       pendente.current = null;
       if (timer.current) clearTimeout(timer.current);
@@ -184,35 +203,45 @@ export function NotesPanel() {
 
   return (
     <Section
-      className="notes-section"
+      className="min-h-0"
       eyebrow="Notas rápidas"
       count={notes.length > 0 ? String(notes.length) : undefined}
       actions={
-        <button type="button" className="btn" onClick={() => void criar()}>
-          Nova nota
-        </button>
+        <IconAction
+          variant="outline"
+          label="Nova nota"
+          onClick={() => void criar()}
+          icon={<Plus className="size-4" />}
+        />
       }
     >
-      {erro && (
-        <p role="alert" className="panel-error">
-          {erro}
-        </p>
-      )}
+      {erro && <PanelError>{erro}</PanelError>}
 
       {!carregando && notes.length === 0 && (
-        <EmptyState message="Nenhuma nota ainda. Crie a primeira." />
+        <EmptyState title="Nenhuma nota ainda." description="Crie a primeira." />
       )}
 
       {notes.length > 0 && (
-        <div className="notes">
+        <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[minmax(140px,26%)_1fr]">
           {/* As abas ficam na vertical e rolam sozinhas: com muitas notas, é a
               coluna que rola, não o painel inteiro. */}
-          <ul className="notes-tabs" aria-label="notas">
+          <ul
+            className="max-h-[40vh] min-h-0 overflow-y-auto pr-2 md:max-h-full md:border-r md:border-line-soft"
+            aria-label="notas"
+          >
             {notes.map((note) => (
-              <li key={note.id} className={`notes-tab${note.id === ativa ? ' is-active' : ''}`}>
+              <li
+                key={note.id}
+                className={cn(
+                  'group flex items-center gap-2 rounded-md transition-colors',
+                  note.id === ativa
+                    ? 'bg-surface-2 shadow-[inset_-2px_0_0_var(--color-brand)]'
+                    : 'hover:bg-surface-1',
+                )}
+              >
                 {renomeando === note.id ? (
-                  <input
-                    className="field notes-tab-input"
+                  <Input
+                    className="h-8 min-w-0 flex-1 px-2 text-sm"
                     aria-label={`renomear ${note.title || 'sem título'}`}
                     defaultValue={note.title}
                     autoFocus
@@ -225,7 +254,11 @@ export function NotesPanel() {
                 ) : (
                   <button
                     type="button"
-                    className="notes-tab-name"
+                    className={cn(
+                      'min-w-0 flex-1 truncate rounded-md px-3 py-2 text-left text-sm transition-colors',
+                      note.id === ativa ? 'text-ink' : 'text-ink-mid hover:text-ink',
+                      focusRing,
+                    )}
                     aria-current={note.id === ativa}
                     onClick={() => void trocarAba(note.id)}
                     onDoubleClick={() => setRenomeando(note.id)}
@@ -236,7 +269,11 @@ export function NotesPanel() {
                 )}
                 <button
                   type="button"
-                  className="icon-btn icon-btn-danger notes-tab-remove"
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-md border border-transparent text-ink-dim opacity-0 transition-[opacity,color,border-color] hover:border-danger/40 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100',
+                    note.id === ativa && 'opacity-100',
+                    focusRing,
+                  )}
                   aria-label={`apagar ${note.title || 'sem título'}`}
                   onClick={() => void apagar(note)}
                 >
@@ -246,10 +283,10 @@ export function NotesPanel() {
             ))}
           </ul>
 
-          <div className="notes-editor">
-            {/* O toggle é por nota, e o rótulo diz o estado atual, não o que
-                o clique faria: é a mesma leitura dos outros chips do painel. */}
-            <div className="notes-bar">
+          <div className="flex min-h-0 flex-col gap-2">
+            {/* O toggle é por nota, e o rótulo diz o estado atual, não o que o
+                clique faria: é a mesma leitura dos outros chips do painel. */}
+            <div className="flex shrink-0 justify-end">
               <Chip active={notaAtiva?.markdown ?? false} onClick={() => void alternarMarkdown()}>
                 Markdown
               </Chip>
@@ -263,8 +300,8 @@ export function NotesPanel() {
                 placeholder="Escreva aqui. O que você digita é salvo sozinho."
               />
             ) : (
-              <textarea
-                className="field notes-text"
+              <Textarea
+                className="min-h-40 flex-1 resize-none leading-relaxed [field-sizing:fixed]"
                 aria-label={`texto de ${notaAtiva?.title || 'sem título'}`}
                 placeholder="Escreva aqui. O que você digita é salvo sozinho."
                 value={rascunho}
@@ -272,12 +309,13 @@ export function NotesPanel() {
                 onBlur={() => void gravarPendente()}
               />
             )}
-            <p className="notes-status" role="status">
+            <p className="type-caption text-right text-ink-dim" role="status">
               {estado === 'salvando' ? 'salvando…' : estado === 'erro' ? 'não salvo' : 'salvo'}
             </p>
           </div>
         </div>
       )}
+      {dialog}
     </Section>
   );
 }

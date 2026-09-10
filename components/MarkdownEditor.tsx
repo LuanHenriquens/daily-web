@@ -9,6 +9,7 @@ import {
   toLineOffset,
 } from '@/lib/markdown';
 import type { LineInfo } from '@/lib/markdown';
+import { cn } from '@/lib/utils';
 import { MarkdownLine } from './MarkdownLine';
 
 interface Props {
@@ -472,10 +473,19 @@ export function MarkdownEditor({ value, onChange, label, placeholder }: Props) {
   const vazia = value === '';
 
   return (
-    <div className="md-editor">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={superficie}
-        className={`md-superficie${vazia ? ' is-vazia' : ''}`}
+        // A superfície é um campo como qualquer outro, então veste o mesmo que
+        // o Textarea veste. O que sobra em CSS à mão é só o que utilitário não
+        // alcança: o tom do sinal e a aparência de cada tipo de linha.
+        className={cn(
+          'min-h-40 flex-1 overflow-y-auto rounded-xl border bg-glass px-4 py-3',
+          'text-sm leading-relaxed shadow-e1 backdrop-blur-sm outline-none',
+          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+          'md-superficie',
+          vazia && 'is-vazia',
+        )}
         contentEditable
         suppressContentEditableWarning
         role="textbox"
