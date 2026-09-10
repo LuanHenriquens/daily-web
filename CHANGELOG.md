@@ -43,6 +43,12 @@ Only `main` is maintained; there are no release branches.
 - Screens use the full width of the display. The content column was capped at
   1280px, which on a wide monitor was empty margin on both sides of a panel
   that is dense on purpose. Frame padding and vertical rhythm tighten with it.
+- Controls whose glyph says it all drop their label: the bell with its count in
+  a round badge, refresh as a spinner that actually spins while it works, the
+  pomodoro's play and pause, a broom to reset it, and the mail batch bar's mark,
+  move and delete. Dropping a label is a space decision and must not become a
+  meaning one, so every one of them keeps its words in a tooltip and in its
+  accessible name — a shared component makes that the only way to build one.
 - The sidebar collapses to a 56px icon rail on Cmd+B or from its own control,
   which gives a vertical monitor back 184px of width. The choice rides a cookie
   the server reads during render, so a collapsed rail never expands for a frame

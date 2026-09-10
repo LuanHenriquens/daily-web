@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { X } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import type { ReactNode } from 'react';
 import GridLayout, { useContainerWidth, type Layout } from 'react-grid-layout';
 import { Button } from '@/components/ui/button';
@@ -184,9 +186,12 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
             >
               {salvando ? 'Salvando…' : 'Salvar para esta tela'}
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={descartar}>
-              Descartar
-            </Button>
+            <IconAction
+              variant="outline"
+              label="Descartar"
+              onClick={descartar}
+              icon={<X className="size-4" />}
+            />
           </div>
         ) : (
           <Button type="button" variant="outline" size="sm" onClick={() => setPinned(true)}>
@@ -196,38 +201,38 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
       </div>
 
       {mounted && (
-      <GridLayout
-        className={`dashboard-grid${arranging ? ' is-arranging' : ''}`}
-        width={width}
-        layout={visible}
-        gridConfig={gridConfig}
-        // Fora do modo de organizar, o painel é conteúdo comum: clicar num
-        // e-mail, marcar uma tarefa e selecionar texto continuam funcionando.
-        dragConfig={dragConfig}
-        resizeConfig={resizeConfig}
-        onLayoutChange={handleChange}
-        onDragStart={() => setDragging(true)}
-        // `onDrag` e `onResize` precisam existir mesmo sem fazer nada: com o
-        // limiar de 3px, a grade adia o início do arrasto para dentro deles
-        // (`if (!onDragProp || !dragging) return`). Sem passá-los, o limiar
-        // nunca é ultrapassado e o painel não sai do lugar.
-        onDrag={naoFazNada}
-        onDragStop={() => setDragging(false)}
-        onResizeStart={() => setDragging(true)}
-        onResize={naoFazNada}
-        onResizeStop={() => setDragging(false)}
-      >
-        {visible.map((p) => (
-          <div
-            key={p.i}
-            data-slot="grid-panel"
-            className={cn(cardSurface, 'flex min-w-0 flex-col overflow-hidden')}
-            data-grid={{ ...p, minW: MIN_PANEL_WIDTH, minH: MIN_PANEL_HEIGHT }}
-          >
-            <PanelFrame>{panels.find((painel) => painel.id === p.i)?.node}</PanelFrame>
-          </div>
-        ))}
-      </GridLayout>
+        <GridLayout
+          className={`dashboard-grid${arranging ? ' is-arranging' : ''}`}
+          width={width}
+          layout={visible}
+          gridConfig={gridConfig}
+          // Fora do modo de organizar, o painel é conteúdo comum: clicar num
+          // e-mail, marcar uma tarefa e selecionar texto continuam funcionando.
+          dragConfig={dragConfig}
+          resizeConfig={resizeConfig}
+          onLayoutChange={handleChange}
+          onDragStart={() => setDragging(true)}
+          // `onDrag` e `onResize` precisam existir mesmo sem fazer nada: com o
+          // limiar de 3px, a grade adia o início do arrasto para dentro deles
+          // (`if (!onDragProp || !dragging) return`). Sem passá-los, o limiar
+          // nunca é ultrapassado e o painel não sai do lugar.
+          onDrag={naoFazNada}
+          onDragStop={() => setDragging(false)}
+          onResizeStart={() => setDragging(true)}
+          onResize={naoFazNada}
+          onResizeStop={() => setDragging(false)}
+        >
+          {visible.map((p) => (
+            <div
+              key={p.i}
+              data-slot="grid-panel"
+              className={cn(cardSurface, 'flex min-w-0 flex-col overflow-hidden')}
+              data-grid={{ ...p, minW: MIN_PANEL_WIDTH, minH: MIN_PANEL_HEIGHT }}
+            >
+              <PanelFrame>{panels.find((painel) => painel.id === p.i)?.node}</PanelFrame>
+            </div>
+          ))}
+        </GridLayout>
       )}
     </div>
   );

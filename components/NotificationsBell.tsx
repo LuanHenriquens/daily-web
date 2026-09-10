@@ -3,7 +3,9 @@
 import { useEffect, useState, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { NotificationItem, NotificationSource, PanelResult } from '@/lib/types';
+import { Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { IconAction } from '@/components/data/IconAction';
 import { Button } from '@/components/ui/button';
 import { tabular } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -117,19 +119,27 @@ export function NotificationsBell({
 
   return (
     <div className="relative" ref={anchorRef}>
-      <Button
-        type="button"
+      <IconAction
         variant="outline"
-        size="sm"
-        aria-label={`notificações (${unreadCount} não lidas)`}
+        label={`notificações (${unreadCount} não lidas)`}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-      >
-        Notificações
-        {unreadCount > 0 && (
-          <Badge className={cn('type-caption px-1.5 leading-none', tabular)}>{unreadCount}</Badge>
-        )}
-      </Button>
+        icon={<Bell className="size-4" />}
+        // O número é informação, não enfeite: fica dentro do botão, como texto,
+        // num disco redondo — nunca só a cor do sino dizendo que há algo.
+        badge={
+          unreadCount > 0 ? (
+            <Badge
+              className={cn(
+                'min-w-5 justify-center rounded-full px-1 type-caption leading-none',
+                tabular,
+              )}
+            >
+              {unreadCount}
+            </Badge>
+          ) : undefined
+        }
+      />
 
       {open &&
         createPortal(

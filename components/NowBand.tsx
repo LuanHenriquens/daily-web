@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Settings } from 'iconoir-react';
+import { RefreshCw } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import type { PomodoroState } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { tabular } from '@/lib/theme';
@@ -50,9 +52,13 @@ export function NowBand({
         <span className={cn('type-caption text-ink-dim', tabular)}>
           {formatUpdatedAt(updatedAt)}
         </span>
-        <Button type="button" variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
-          {loading ? 'Atualizando' : 'Atualizar'}
-        </Button>
+        <IconAction
+          variant="outline"
+          label={loading ? 'Atualizando…' : 'Atualizar agora'}
+          onClick={onRefresh}
+          disabled={loading}
+          icon={<RefreshCw className={cn('size-4', loading && 'animate-spin')} />}
+        />
         {extra}
         {bell}
         <Button asChild variant="ghost" size="icon-sm">

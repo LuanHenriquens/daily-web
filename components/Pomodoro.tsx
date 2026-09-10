@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Broom, Pause, Play } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import type { PomodoroPhase, PomodoroState } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { tabular } from '@/lib/theme';
@@ -109,28 +111,22 @@ export function Pomodoro({ pomodoro, onChanged }: Props) {
         </span>
       </div>
       <div className="flex gap-2">
-        <Button
-          type="button"
-          size="sm"
-          aria-label={pomodoro.running ? 'pausar foco' : 'iniciar foco'}
+        <IconAction
+          variant="default"
+          label={pomodoro.running ? 'pausar foco' : 'iniciar foco'}
           onClick={() =>
             void post(
               pomodoro.running ? '/api/pomodoro/pause' : '/api/pomodoro/start',
               'Falha ao atualizar pomodoro',
             )
           }
-        >
-          {pomodoro.running ? 'Pausar' : 'Iniciar'}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="zerar pomodoro"
+          icon={pomodoro.running ? <Pause className="size-4" /> : <Play className="size-4" />}
+        />
+        <IconAction
+          label="zerar pomodoro"
           onClick={() => void post('/api/pomodoro/reset', 'Falha ao zerar pomodoro')}
-        >
-          Zerar
-        </Button>
+          icon={<Broom className="size-4" />}
+        />
       </div>
       {error && (
         <span role="alert" className="type-caption text-danger">

@@ -20,7 +20,14 @@ function TooltipProvider({
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  // Self-providing: a Tooltip without a Provider ancestor throws, which makes a
+  // component that is fine inside the shell blow up the moment it is rendered on
+  // its own — in a test, say. An outer Provider still wins for shared delay.
+  return (
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
 }
 
 function TooltipTrigger({

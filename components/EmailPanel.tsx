@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { FolderInput, Mail, MailOpen, Trash2 } from 'lucide-react';
+import { IconAction } from '@/components/data/IconAction';
 import { Label, Trash } from 'iconoir-react';
 import type { Account, EmailEnvelope, EmailThread, MailboxRef, PanelResult } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
@@ -354,12 +356,18 @@ export function EmailPanel({
     selected.size > 0 ? (
       <>
         <span className={cn('text-sm text-ink-dim', tabular)}>{selected.size} selecionados</span>
-        <Button type="button" variant="outline" size="sm" onClick={() => void runBatch('read')}>
-          Marcar lido
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => void runBatch('unread')}>
-          Marcar não lido
-        </Button>
+        <IconAction
+          variant="outline"
+          label="Marcar lido"
+          onClick={() => void runBatch('read')}
+          icon={<MailOpen className="size-4" />}
+        />
+        <IconAction
+          variant="outline"
+          label="Marcar não lido"
+          onClick={() => void runBatch('unread')}
+          icon={<Mail className="size-4" />}
+        />
         {folders.length > 0 && (
           <>
             <select
@@ -374,24 +382,20 @@ export function EmailPanel({
                 </option>
               ))}
             </select>
-            <Button
-              type="button"
+            <IconAction
               variant="outline"
-              size="sm"
+              label="Mover"
               onClick={() => void runBatch('move', targetFolder)}
-            >
-              Mover
-            </Button>
+              icon={<FolderInput className="size-4" />}
+            />
           </>
         )}
-        <Button
-          type="button"
+        <IconAction
           variant="destructive"
-          size="sm"
+          label="Excluir"
           onClick={() => void runBatch('delete')}
-        >
-          Excluir
-        </Button>
+          icon={<Trash2 className="size-4" />}
+        />
       </>
     ) : null;
 
