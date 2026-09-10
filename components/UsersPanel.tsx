@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Trash } from 'iconoir-react';
 import { Section } from './ui/Section';
 import { EmptyState } from './ui/EmptyState';
-import { SkeletonRows } from './ui/Skeleton';
+import { SkeletonRows } from './ui/legacy-skeleton';
 
 interface PublicUser {
   id: string;

@@ -7,7 +7,7 @@ import { Section } from './ui/Section';
 import { FilterBar } from './ui/FilterBar';
 import { Chip } from './ui/Chip';
 import { EmptyState } from './ui/EmptyState';
-import { SkeletonRows } from './ui/Skeleton';
+import { SkeletonRows } from './ui/legacy-skeleton';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const MONTHS = [

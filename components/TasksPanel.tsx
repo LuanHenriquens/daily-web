@@ -14,7 +14,7 @@ import { SearchInput } from './ui/SearchInput';
 import { Chip } from './ui/Chip';
 import { ActiveFilters } from './ui/ActiveFilters';
 import { EmptyState } from './ui/EmptyState';
-import { SkeletonRows } from './ui/Skeleton';
+import { SkeletonRows } from './ui/legacy-skeleton';
 
 interface Props {
   tasks: PanelResult<TodoTask[]>;

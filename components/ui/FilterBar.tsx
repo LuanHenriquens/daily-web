@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Sheet } from './Sheet';
+import { Sheet } from './legacy-sheet';
 
 // No desktop os controles ficam inline. Em telas pequenas colapsam num
 // botão que abre a mesma coleção de controles numa folha de tela cheia,

@@ -5,7 +5,7 @@ import type { PanelResult, PullRequestItem, PullsDigest } from '@/lib/types';
 import { groupByRepo, repoUrl, type RepoGroup } from '@/lib/integrations/githubApi';
 import { Section } from './ui/Section';
 import { EmptyState } from './ui/EmptyState';
-import { SkeletonRows } from './ui/Skeleton';
+import { SkeletonRows } from './ui/legacy-skeleton';
 
 // Os PRs vinham como linhas de texto de uma CLI, então a única coisa a fazer
 // era achar a URL no meio da frase. Agora chegam estruturados da API do

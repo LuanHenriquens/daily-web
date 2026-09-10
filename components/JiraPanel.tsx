@@ -16,13 +16,13 @@ import {
 } from '@/lib/parsers/jira';
 import type { JiraNode, JiraProjectGroup } from '@/lib/parsers/jira';
 import { Section } from './ui/Section';
-import { Tabs } from './ui/Tabs';
+import { Tabs } from './ui/legacy-tabs';
 import { FilterBar } from './ui/FilterBar';
 import { SearchInput } from './ui/SearchInput';
 import { Chip } from './ui/Chip';
 import { ActiveFilters } from './ui/ActiveFilters';
 import { EmptyState } from './ui/EmptyState';
-import { SkeletonRows } from './ui/Skeleton';
+import { SkeletonRows } from './ui/legacy-skeleton';
 
 type Filter = 'both' | 'assignee' | 'reporter';
 
