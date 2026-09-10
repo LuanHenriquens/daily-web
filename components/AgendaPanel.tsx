@@ -137,7 +137,7 @@ export function AgendaPanel({ agenda, days, onChanged, loading = false }: Props)
           <ul>
             {items.map((item, i) => (
               <li key={`${date}-${i}`} className="agenda-item">
-                <span className="agenda-time mono">{item.time || 'dia'}</span>
+                <span className="agenda-time tabular">{item.time || 'dia'}</span>
                 <span className="agenda-title">{item.title}</span>
                 {multiplasAgendas && item.accountLabel && (
                   <span className="row-tag">{item.accountLabel}</span>

@@ -8,33 +8,108 @@
    ============================================================ */
 
 :root {
-  /* superfícies */
-  --canvas: #0d0b14;
-  --surface: #17141f;
-  --surface-hover: #211c2e;
-  --hairline: #2c2740;
-  --hairline-strong: #3a3350;
+  color-scheme: dark;
 
-  /* texto */
-  --text: #f0edf7;
-  --text-muted: #9891ac;
-  --text-faint: #6b6480;
+  /* ---------- rampa de superfícies (6 níveis) ----------
+     Escuro por natureza: aqui a profundidade vem da LUMINOSIDADE, não da
+     sombra, porque sombra quase não lê sobre preto. surface-1 é de propósito
+     MAIS ESCURO que surface-0 — um plano recuado afunda, nunca sobe. Não
+     tornar a rampa monotônica. */
+  --surface-0: oklch(0.157 0.019 296); /* piso da página */
+  --surface-1: oklch(0.135 0.017 296); /* plano recuado */
+  --surface-2: oklch(0.2 0.022 297); /* painel, card */
+  --surface-3: oklch(0.222 0.028 297); /* barra, toolbar */
+  --surface-4: oklch(0.241 0.034 297); /* popover, menu */
+  --surface-5: oklch(0.262 0.038 297); /* modal */
 
-  /* acento e semântica */
-  --accent: #b48cff;
-  --accent-dim: #8b6bc7;
-  --success: #7fdbb0;
-  --warn: #ff9b7a;
-  --danger: #ff6b81;
+  /* shiny = brilho branco interno, largo, caindo do topo DENTRO da
+     superfície. É o que faz um painel ler como vidro e não como retângulo
+     pintado. Nunca `none`: as elevações compõem estes três. */
+  --shiny-sm: inset 0 20px 50px 0 oklch(1 0 0 / 5%);
+  --shiny: inset 0 30px 60px 0 oklch(1 0 0 / 6%);
+  --shiny-lg: inset 0 50px 100px 0 oklch(1 0 0 / 7%);
 
-  /* escala tipográfica */
-  --step--1: 0.8125rem;
-  --step-0: 0.9375rem;
-  --step-1: 1.125rem;
-  --step-2: 1.5rem;
+  --elevation-1: var(--shiny-sm), 0 1px 0 oklch(0 0 0 / 35%);
+  --elevation-2: var(--shiny), 0 1px 0 oklch(0 0 0 / 35%), 0 4px 2px oklch(0 0 0 / 30%);
+  --elevation-3:
+    var(--shiny), 0 1px 0 oklch(0 0 0 / 40%), 0 4px 2px oklch(0 0 0 / 35%),
+    0 10px 5px oklch(0 0 0 / 45%);
+  --elevation-4: var(--shiny-lg), 0 2px 4px oklch(0 0 0 / 45%), 0 12px 24px oklch(0 0 0 / 55%);
+  --elevation-5: var(--shiny-lg), 0 4px 8px oklch(0 0 0 / 50%), 0 24px 48px oklch(0 0 0 / 65%);
+  --glow: 0 0 8px oklch(from var(--brand) l c h / 35%), 0 0 16px oklch(from var(--brand) l c h / 20%);
+
+  /* ---------- tinta ---------- */
+  --ink: oklch(0.951 0.014 300);
+  --ink-mid: oklch(0.951 0.014 300 / 72%); /* texto secundário legível */
+  --ink-dim: oklch(0.951 0.014 300 / 52%); /* rótulo e apoio, nunca corpo de texto */
+
+  /* ---------- linhas ----------
+     Contraste baixo de propósito: a linha delimita, o bevel é que brilha.
+     Família separada do --border/--glass-line, que é o fio branco do vidro. */
+  --line: oklch(0.29 0.045 293);
+  --line-soft: oklch(0.225 0.03 295);
+  --line-strong: oklch(0.342 0.051 295);
+
+  /* ---------- acento ----------
+     Estes quatro andam juntos: mudar --brand sozinho deixa a tinta e os
+     lavados apontando para o acento antigo. */
+  --brand: oklch(0.725 0.165 298);
+  --brand-ink: oklch(0.189 0.031 302); /* 7.2:1 sobre --brand */
+  --brand-tint: oklch(from var(--brand) l c h / 14%);
+  --brand-edge: oklch(from var(--brand) l c h / 45%);
+
+  /* ---------- sinal ----------
+     NUNCA segue o acento. O acento é roxo (matiz 298); estes quatro guardam
+     distância dele de propósito, inclusive o info em 220 em vez do azul
+     convencional em 250, que colidiria com o roxo. */
+  --signal-success: oklch(0.822 0.108 162);
+  --signal-warning: oklch(0.785 0.129 39);
+  --signal-danger: oklch(0.716 0.181 14);
+  --signal-info: oklch(0.78 0.1 220);
+  --signal-neutral: var(--ink-dim);
+  --signal-success-tint: oklch(0.822 0.108 162 / 16%);
+  --signal-warning-tint: oklch(0.785 0.129 39 / 16%);
+  --signal-danger-tint: oklch(0.716 0.181 14 / 16%);
+  --signal-info-tint: oklch(0.78 0.1 220 / 16%);
+  --signal-neutral-tint: oklch(0.672 0.04 297 / 16%);
+
+  /* ---------- vidro ----------
+     Um pouco mais forte que a referência (2%/5%): o fundo ambiente desta app
+     é mais discreto que a malha de onde o sistema veio, e a 2% o painel
+     desapareceria em vez de flutuar. */
+  --glass: oklch(1 0 0 / 4%);
+  --glass-strong: oklch(1 0 0 / 7%);
+  --glass-line: oklch(1 0 0 / 12%);
+
+  /* Fio branco translúcido do vidro. Não é cinza opaco: toda superfície de
+     vidro sobre o fundo ambiente depende dele. Superfície opaca usa --line. */
+  --border: var(--glass-line);
+
+  /* ---------- peças elevadas ---------- */
+  --button-face: linear-gradient(
+    145deg,
+    oklch(from var(--brand) calc(l + 0.055) c h),
+    oklch(from var(--brand) calc(l - 0.05) c h)
+  );
+  --button-rim:
+    inset 0 1px 0 oklch(from var(--brand) calc(l + 0.18) calc(c * 0.6) h),
+    inset 0 -1px 0 oklch(from var(--brand) calc(l + 0.1) calc(c * 0.8) h);
+  /* Gêmeo neutro do button-rim, para uma peça elevada que não é ação (a aba
+     acesa, o chip ligado). O rim do acento tingiria um controle que não age. */
+  --control-rim: inset 0 1px 0 oklch(1 0 0 / 16%);
+
+  /* ---------- escala tipográfica ----------
+     Sete papéis. Cada um carrega família, tamanho, entrelinha, peso e
+     tracking juntos — pedir só o tamanho e escolher o resto no ponto de uso é
+     exatamente como uma escala se desfaz. Ver as classes .type-*. */
+  --step--1: 0.8125rem; /* legenda, 13px */
+  --step-data: 0.875rem; /* dado, 14px */
+  --step-0: 1rem; /* corpo, 16px */
+  --step-1: 1.25rem; /* subtítulo, 20px */
+  --step-2: 1.875rem; /* título de tela, 30px */
   --hero: clamp(3.25rem, 9vw, 6.5rem);
 
-  /* espaçamento (base 4px) */
+  /* ---------- espaçamento (base 4px) ---------- */
   --s1: 0.25rem;
   --s2: 0.5rem;
   --s3: 0.75rem;
@@ -44,21 +119,58 @@
   --s7: 3rem;
   --s8: 4rem;
 
-  /* barra de rolagem */
-  --scrollbar-thumb: #37314a;
-  --scrollbar-thumb-hover: var(--accent-dim);
+  /* ---------- raio ----------
+     Botões, chips e pílulas de status não usam esta escada: são redondos. */
+  --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 5px);
 
-  /* movimento */
+  /* ---------- movimento ---------- */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --fast: 140ms;
   --med: 220ms;
 
-  /* fundo ambiente (sobrescrito em runtime pela hora do dia) */
-  --ambient-top: hsl(258 70% 55% / 0.1);
-  --ambient-bottom: hsl(228 65% 45% / 0.06);
+  /* ---------- fundo ambiente ----------
+     O topo e a base são sobrescritos em runtime pela hora do dia (ver
+     lib/ambient.ts): a tela é um segundo relógio. Os três lavados fixos
+     abaixo não acompanham a hora — existem para o vidro ter o que refratar,
+     senão um painel a 4% de branco não se destaca do piso. */
+  --ambient-top: oklch(0.55 0.16 270 / 10%);
+  --ambient-bottom: oklch(0.45 0.15 240 / 6%);
+  --ambient-1: oklch(0.42 0.1 320 / 7%);
+  --ambient-2: oklch(0.45 0.08 200 / 5%);
+  --ambient-3: oklch(0.4 0.09 265 / 6%);
+
+  /* ---------- barra de rolagem ---------- */
+  --scrollbar-thumb: var(--line-strong);
+  --scrollbar-thumb-hover: var(--ink-dim);
+
+  /* ---------- aliases herdados ----------
+     Nomes que o resto do CSS e os componentes já chamam. Ficam como apelido
+     apontando para a nova camada, em vez de serem apagados: são centenas de
+     pontos de uso. Não redeclarar cor aqui — só apontar. */
+  --canvas: var(--surface-0);
+  --surface: var(--surface-2);
+  --surface-hover: var(--surface-4);
+  --hairline: var(--line);
+  --hairline-strong: var(--line-strong);
+  --text: var(--ink);
+  --text-muted: var(--ink-mid);
+  --text-faint: var(--ink-dim);
+  --accent: var(--brand);
+  --accent-dim: oklch(0.599 0.139 298);
+  --success: var(--signal-success);
+  --warn: var(--signal-warning);
+  --danger: var(--signal-danger);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  /* O display É o sans. O que separa título de corpo é tamanho, peso e
+     tracking negativo — nunca uma segunda família. */
+  --font-display: var(--font-sans);
 }
 
 *,
@@ -110,10 +222,14 @@ textarea {
   color: inherit;
 }
 
+/* Uma receita de foco para o produto inteiro, em um lugar só, em vez de cada
+   componente lembrar da sua. O anel é o acento, a 50%, com 1px de respiro. */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--surface-0),
+    0 0 0 4px oklch(from var(--brand) l c h / 50%);
+  border-radius: var(--radius-sm);
 }
 
 .mono {
@@ -133,6 +249,98 @@ textarea {
   border: 0;
 }
 
+/* ---------- papéis tipográficos ----------
+   Sete papéis, cada um carregando família, tamanho, entrelinha, peso e
+   tracking juntos. Compor um .type-* com um tamanho solto no ponto de uso
+   desfaz a escala: escolha o papel e pare por aí.
+   A hierarquia vem de tamanho, peso e tracking negativo — nunca de uma
+   segunda família, e o teto é 600, não 700. */
+
+.type-display {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.type-title {
+  font-family: var(--font-display);
+  font-size: 2.125rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.type-heading {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.type-subhead {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.type-body {
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.type-data {
+  font-family: var(--font-sans);
+  font-size: var(--step-data);
+  line-height: 1.45;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sem caixa alta e sem tracking largo: esse par é o que faz uma tela ler como
+   terminal em vez de produto. */
+.type-caption {
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Número é sempre a família de texto com tabular-nums. A mono fica reservada
+   para hash, caminho de JSON, hex e frase de confirmação digitada. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- vidro ----------
+   O blur não é enfeite: é o que mantém o fundo ambiente longe do texto. Uma
+   superfície de vidro sem ele mostra o gradiente cru através do conteúdo. */
+
+.glass {
+  background-color: var(--glass);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--glass-line);
+}
+
+.glass-strong {
+  background-color: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--glass-line);
+}
+
 /* ---------- assinatura: fundo ambiente ---------- */
 
 .ambient {
@@ -142,7 +350,11 @@ textarea {
   pointer-events: none;
   background:
     radial-gradient(120% 75% at 50% -15%, var(--ambient-top), transparent 68%),
-    radial-gradient(100% 55% at 50% 115%, var(--ambient-bottom), transparent 70%);
+    radial-gradient(100% 55% at 50% 115%, var(--ambient-bottom), transparent 70%),
+    radial-gradient(70% 50% at 88% 22%, var(--ambient-1), transparent 60%),
+    radial-gradient(65% 45% at 10% 62%, var(--ambient-2), transparent 58%),
+    radial-gradient(80% 55% at 62% 86%, var(--ambient-3), transparent 62%);
+  background-attachment: fixed;
   transition: background 3s linear;
 }
 
@@ -182,8 +394,9 @@ textarea {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s4);
-  padding-bottom: var(--s3);
-  border-bottom: 1px solid var(--hairline);
+  /* Sem régua sob o cabeçalho: agora que o painel é um card, a borda dele já
+     diz onde a peça começa, e a segunda linha só some com o respiro. */
+  padding-bottom: var(--s2);
   margin-bottom: var(--s4);
 }
 
@@ -194,17 +407,21 @@ textarea {
   min-width: 0;
 }
 
+/* Rótulo de seção em caixa de frase, sem tracking largo. Caixa alta com
+   tracking é o que faz uma tela ler como terminal em vez de produto, e é
+   também o que apagava a diferença entre um rótulo e o título ao lado. */
 .eyebrow {
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-faint);
 }
 
 .section-count {
   font-size: var(--step--1);
   color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .section-actions {
@@ -222,17 +439,45 @@ textarea {
   justify-content: center;
   gap: var(--s2);
   min-height: 32px;
-  padding: 0 var(--s3);
-  border: 1px solid var(--hairline);
-  border-radius: 7px;
-  background: transparent;
+  padding: 0 var(--s4);
+  border: 1px solid var(--line-strong);
+  /* Botão, chip e pílula de status são redondos e ficam fora da escada de
+     raio: a escada é para container, não para controle. */
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: var(--step--1);
+  /* Um <a> com classe de botão herdava o sublinhado do navegador; agora que o
+     botão tem superfície própria, o sublinhado lia como defeito. */
+  text-decoration: none;
   cursor: pointer;
+  box-shadow: var(--elevation-1);
   transition:
     background var(--fast) var(--ease),
     color var(--fast) var(--ease),
-    border-color var(--fast) var(--ease);
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: var(--elevation-2);
+}
+
+/* O único translate do sistema: 1px de afundamento ao pressionar, atrás de
+   motion-safe. Movimento aqui confirma a ação, não decora. */
+@media (prefers-reduced-motion: no-preference) {
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+.btn:active:not(:disabled) {
+  box-shadow: none;
+}
+
+.btn:disabled {
+  box-shadow: none;
 }
 
 .btn:hover:not(:disabled) {
@@ -247,22 +492,35 @@ textarea {
 
 .btn-primary {
   border-color: transparent;
-  background: var(--accent);
-  color: #16101f;
+  /* O `background-color` fica por baixo de propósito: é o que pinta caso a
+     face de gradiente não resolva. O hover é brilho, não troca de fundo —
+     um fundo sólido pintaria por cima da face e a apagaria. */
+  background-color: var(--brand);
+  background-image: var(--button-face);
+  color: var(--brand-ink);
   font-weight: 500;
+  box-shadow: var(--button-rim), var(--elevation-2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #c6a5ff;
-  color: #16101f;
+  filter: brightness(1.06);
+  box-shadow: var(--button-rim), var(--elevation-3);
+}
+
+.btn-primary:active:not(:disabled) {
+  filter: brightness(0.95);
+  box-shadow: var(--button-rim), var(--elevation-1);
 }
 
 .btn-ghost {
   border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-hover);
+  box-shadow: none;
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -272,28 +530,32 @@ textarea {
 
 .field {
   min-height: 32px;
-  padding: 0 var(--s3);
-  border: 1px solid var(--hairline);
-  border-radius: 7px;
-  background: var(--surface);
+  padding: 0 var(--s4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(8px);
   color: var(--text);
   font-size: var(--step--1);
-  transition: border-color var(--fast) var(--ease);
+  box-shadow: var(--elevation-1);
+  transition:
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease);
 }
 
 /* Selects nativos trazem uma seta do sistema que destoa do resto; desenhamos
    a nossa em SVG inline para o controle ficar coerente com os chips. */
 select.field {
   appearance: none;
-  padding-right: calc(var(--s3) + 14px);
+  padding-right: calc(var(--s4) + 14px);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239891ac' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right var(--s3) center;
+  background-position: right var(--s4) center;
   cursor: pointer;
 }
 
 select.field option {
-  background: var(--surface);
+  background: var(--surface-4);
   color: var(--text);
 }
 
@@ -305,9 +567,9 @@ input[type='checkbox'] {
   width: 16px;
   height: 16px;
   margin: 0;
-  border: 1px solid var(--hairline-strong);
-  border-radius: 5px;
-  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass);
   cursor: pointer;
   transition:
     background var(--fast) var(--ease),
@@ -331,7 +593,7 @@ input[type='checkbox']:checked {
 }
 
 .field:focus {
-  border-color: var(--accent-dim);
+  border-color: var(--brand);
 }
 
 /* ---------- filtros ---------- */
@@ -384,9 +646,12 @@ input[type='checkbox']:checked {
 }
 
 .chip-active {
-  border-color: var(--accent-dim);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--brand-edge);
+  background: var(--brand-tint);
   color: var(--text);
+  /* Aro neutro: um chip aceso é um controle, não uma ação. O aro do acento
+     tingiria a peça inteira. */
+  box-shadow: var(--control-rim), var(--elevation-1);
 }
 
 /* ---------- abas ----------
@@ -456,7 +721,7 @@ input[type='checkbox']:checked {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(6, 4, 12, 0.6);
+  background: oklch(0.06 0.015 295 / 60%);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: flex-end;
@@ -467,9 +732,11 @@ input[type='checkbox']:checked {
   max-height: 85dvh;
   overflow-y: auto;
   padding: var(--s5) var(--s5) calc(var(--s5) + env(safe-area-inset-bottom));
-  background: var(--surface);
-  border-top: 1px solid var(--hairline-strong);
-  border-radius: 18px 18px 0 0;
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--elevation-5);
   animation: sheet-in var(--med) var(--ease);
 }
 
@@ -507,7 +774,7 @@ input[type='checkbox']:checked {
   gap: var(--s5);
   flex-wrap: wrap;
   padding: var(--s8) 0 var(--s6);
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--line-soft);
   margin-bottom: var(--s7);
 }
 
@@ -526,6 +793,7 @@ input[type='checkbox']:checked {
 
 .now-time {
   font-size: var(--hero);
+  font-variant-numeric: tabular-nums;
   font-weight: 300;
   line-height: 0.92;
   letter-spacing: -0.03em;
@@ -676,7 +944,7 @@ input[type='checkbox']:checked {
    já procura o número da linha. */
 .row-count {
   flex: none;
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
   background: color-mix(in srgb, var(--surface) 70%, transparent);
   border: 1px solid var(--hairline);
@@ -732,7 +1000,7 @@ input[type='checkbox']:checked {
    isto, "você" e o remetente ficam indistinguíveis na lista da conversa. */
 .thread-sent {
   flex: none;
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
   border: 1px solid var(--hairline);
   border-radius: 4px;
@@ -863,7 +1131,7 @@ textarea.mail-reply-input {
 }
 
 .row-tag {
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
   border: 1px solid var(--hairline);
   border-radius: 4px;
@@ -893,7 +1161,7 @@ textarea.mail-reply-input {
   height: 26px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 999px;
   background: none;
   color: var(--text-faint);
   cursor: pointer;
@@ -938,10 +1206,11 @@ textarea.mail-reply-input {
   max-height: 320px;
   overflow-y: auto;
   padding: var(--s2);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 12px;
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-4);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1003,20 +1272,24 @@ textarea.mail-reply-input {
   text-decoration: line-through;
 }
 
+/* A cor e o glifo vêm da pílula; esta classe só reserva o espaço. */
 .task-flag {
-  font-size: 0.6875rem;
-  padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid currentColor;
   flex: none;
 }
 
-.task-flag-high {
-  color: var(--warn);
-}
-
-.task-flag-low {
-  color: var(--text-faint);
+/* Etiqueta neutra: diz um atributo do item, não o estado dele. Por isso não
+   ganha glifo nem matiz — só o peso mínimo para se separar do texto ao lado. */
+.tag {
+  flex: none;
+  padding: 0.125rem var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--signal-neutral-tint);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .task-due {
@@ -1097,7 +1370,7 @@ textarea.mail-reply-input {
   border-radius: 5px;
   background: transparent;
   color: var(--text-faint);
-  font-size: 0.9rem;
+  font-size: var(--step-0);
   line-height: 1;
   cursor: pointer;
   transition:
@@ -1180,25 +1453,19 @@ textarea.mail-reply-input {
   display: flex;
   align-items: center;
   gap: var(--s3);
-  font-size: 0.75rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
 }
 
 /* A situação é o que muda de linha para linha; a cor separa "já comecei" de
    "ainda não" sem precisar ler. */
+/* A cor e o glifo vêm da pílula de status; estas classes seguem existindo
+   como gancho, sem pintar nada. O status não pode seguir o acento. */
 .jira-status {
-  color: var(--text-muted);
+  flex: none;
 }
 
-.jira-status-indeterminate {
-  color: var(--accent);
-}
 
-/* Entregue é a única situação que não pede nada de você: verde, e a aba
-   "Entregues" fica legível de relance, sem ler status por status. */
-.jira-status-done {
-  color: var(--success);
-}
 
 /* Esquecido e atrasado são os dois avisos do painel: ficam quentes, e são
    raros o bastante para a cor continuar significando alguma coisa. */
@@ -1222,7 +1489,7 @@ textarea.mail-reply-input {
 
 .jira-kind {
   line-height: 1.55;
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
   flex: none;
 }
@@ -1247,27 +1514,31 @@ textarea.mail-reply-input {
   white-space: nowrap;
 }
 
+/* Selo de papel: pílula, sem caixa alta e sem tracking largo. */
 .jira-role {
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-size: var(--step--1);
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 0.125rem var(--s2);
+  border-radius: 999px;
   border: 1px solid currentColor;
   flex: none;
 }
 
 .jira-role-rel {
-  color: var(--success);
+  color: var(--signal-success);
 }
 
 .jira-role-res {
-  color: var(--warn);
+  color: var(--signal-warning);
 }
 
 /* Decisão pendente é a única marca que pede ação de quem olha, e por isso é a
-   que puxa mais atenção que os selos de papel. */
+   que puxa mais atenção que os selos de papel. Sai do acento e vai para o
+   sinal de informação: uma marca de estado que segue o acento mudaria de cor
+   quando o acento mudasse, sem nada ter acontecido com o estado. */
 .jira-role-aprov {
-  color: var(--accent);
+  color: var(--signal-info);
   font-weight: 600;
 }
 
@@ -1393,8 +1664,9 @@ textarea.mail-reply-input {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--accent);
-  color: #16101f;
+  color: var(--brand-ink);
   font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   line-height: 16px;
   text-align: center;
@@ -1415,10 +1687,11 @@ textarea.mail-reply-input {
   max-height: 70vh;
   overflow-y: auto;
   padding: var(--s4);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-4);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1479,8 +1752,8 @@ textarea.mail-reply-input {
 }
 
 .bell-source {
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
+  font-size: var(--step--1);
+  font-weight: 500;
   color: var(--text-faint);
 }
 
@@ -1494,7 +1767,7 @@ textarea.mail-reply-input {
   align-items: center;
   justify-content: center;
   padding: var(--s5);
-  background: rgba(6, 4, 12, 0.62);
+  background: oklch(0.06 0.015 295 / 62%);
   backdrop-filter: blur(8px);
   animation: fade-in var(--med) var(--ease);
 }
@@ -1507,9 +1780,11 @@ textarea.mail-reply-input {
   flex-direction: column;
   gap: var(--s4);
   padding: var(--s6);
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 16px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-5);
   animation: modal-in var(--med) var(--ease);
 }
 
@@ -1531,7 +1806,7 @@ textarea.mail-reply-input {
 }
 
 .modal-hint {
-  font-size: 0.75rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
 }
 
@@ -1589,8 +1864,13 @@ textarea.mail-reply-input {
 .skeleton {
   display: block;
   height: 12px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-4) 50%,
+    var(--surface-2) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-sweep 1.4s linear infinite;
 }
@@ -1604,25 +1884,122 @@ textarea.mail-reply-input {
   }
 }
 
+/* A única borda tracejada do sistema, e sobre a superfície recuada em vez da
+   elevada: uma caixa vazia é um buraco, não um painel. */
 .empty {
-  padding: var(--s6) 0;
-  color: var(--text-faint);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s7) var(--s5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text-muted);
   font-size: var(--step--1);
+  text-align: center;
+}
+
+.empty-title {
+  color: var(--text);
+}
+
+.empty p {
+  max-width: 42ch;
 }
 
 /* Um painel sem credencial é informação, não alarme: o erro fica contido
    num bloco discreto com marcador lateral, em vez de texto vermelho solto
    competindo com o conteúdo real das outras seções. */
+/* Uma busca que falhou desenha um card dentro da moldura da página, nunca uma
+   fronteira que leva a navegação junto. Diz o que falhou e oferece repetir. */
 .panel-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
   margin: var(--s2) 0;
-  padding: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--signal-warning-tint);
   border-left: 2px solid var(--warn);
-  border-radius: 0 6px 6px 0;
-  background: color-mix(in srgb, var(--warn) 7%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--signal-warning-tint);
   color: var(--text-muted);
   font-size: var(--step--1);
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+/* ---------- status ----------
+   Estado nunca é só matiz: cada pílula carrega glifo e rótulo junto, para a
+   leitura sobreviver a daltonismo e a uma impressão em preto e branco.
+   O glifo é texto Unicode dentro de um aria-hidden, não um ícone: um ícone
+   muda o alinhamento pela linha de base e quebra o ritmo do vão. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  width: fit-content;
+  padding: 0.125rem var(--s2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.status-pill-glyph {
+  font-size: 0.75em;
+  line-height: 1;
+}
+
+/* Nenhum destes segue o acento: um status não pode mudar de cor porque o
+   acento mudou, sem nada ter acontecido com o status. */
+.status-neutral {
+  border-color: var(--line-strong);
+  background: var(--signal-neutral-tint);
+  color: var(--text-muted);
+}
+
+.status-success {
+  border-color: oklch(from var(--signal-success) l c h / 40%);
+  background: var(--signal-success-tint);
+  color: var(--signal-success);
+}
+
+.status-warning {
+  border-color: oklch(from var(--signal-warning) l c h / 45%);
+  background: var(--signal-warning-tint);
+  color: var(--signal-warning);
+}
+
+.status-danger {
+  border-color: oklch(from var(--signal-danger) l c h / 40%);
+  background: var(--signal-danger-tint);
+  color: var(--signal-danger);
+}
+
+.status-info {
+  border-color: oklch(from var(--signal-info) l c h / 40%);
+  background: var(--signal-info-tint);
+  color: var(--signal-info);
+}
+
+/* Um qualificador secundário fica FORA da pílula: dentro, ele competiria com
+   o rótulo que carrega o estado. */
+.status-note {
+  font-size: var(--step--1);
+  color: var(--text-faint);
+}
+
+/* Onde a pílula pesa demais numa lista densa, o mesmo vocabulário vira um
+   ponto de 8px — e aí o rótulo traduzido é que carrega o sentido. */
+.status-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
 }
 
 /* ---------- login ---------- */
@@ -1657,9 +2034,11 @@ textarea.mail-reply-input {
 }
 
 .login-title {
-  font-size: var(--step-2);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 2.125rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.04em;
 }
 
 .login-sub {
@@ -2077,7 +2456,7 @@ textarea.mail-reply-input {
 }
 
 .conn-help {
-  font-size: 0.75rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
 }
 
@@ -2165,6 +2544,20 @@ textarea.mail-reply-input {
 .grid-panel {
   min-width: 0;
   overflow: hidden;
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--glass);
+  /* O blur não é enfeite: é o que mantém o fundo ambiente longe do texto.
+     Sem ele o painel mostra o gradiente cru por dentro do conteúdo. */
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: var(--elevation-2);
+}
+
+/* Numa largura estreita não há grade impondo altura: o painel cresce com o
+   conteúdo e quem rola é a página. */
+.grid-panel-flow {
+  overflow: visible;
 }
 
 /* O painel tem altura definida pela grade, então o conteúdo rola por dentro.
@@ -2183,7 +2576,7 @@ textarea.mail-reply-input {
 }
 
 .dashboard-grid.is-arranging .grid-panel {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   outline: 1px dashed var(--hairline-strong);
   outline-offset: var(--s2);
   cursor: grab;
@@ -2206,14 +2599,14 @@ textarea.mail-reply-input {
 
 .react-grid-item.react-draggable-dragging .grid-panel {
   outline-color: var(--accent);
-  background: var(--surface);
-  box-shadow: 0 24px 60px rgba(4, 2, 10, 0.55);
+  background: var(--surface-3);
+  box-shadow: var(--elevation-5);
 }
 
 /* O retângulo que mostra onde o painel vai cair. */
 .react-grid-item.react-grid-placeholder {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  border-radius: 12px;
+  background: var(--brand-tint);
+  border-radius: var(--radius-xl);
   opacity: 1;
 }
 
@@ -2506,7 +2899,57 @@ textarea.mail-reply-input {
 }
 
 .notes-status {
-  font-size: 0.6875rem;
+  font-size: var(--step--1);
   color: var(--text-faint);
   text-align: right;
+}
+
+/* ---------- densidade compacta ----------
+   Estado de três valores como o tema: "confortável" é a AUSÊNCIA do atributo
+   e do cookie; compacto carimba data-density="compact" no <html>, para que
+   modal, folha e popover — que vivem fora da árvore da página — herdem.
+
+   Mexe só em ritmo vertical. Tamanho de fonte e respiro horizontal ficam
+   iguais: o que uma tela densa precisa é de mais linhas visíveis, não de
+   texto menor. Estas regras ficam por último no arquivo de propósito. */
+[data-density='compact'] .row {
+  padding-block: var(--s2);
+}
+
+[data-density='compact'] .jira-row,
+[data-density='compact'] .thread-row,
+[data-density='compact'] .pull-row,
+[data-density='compact'] .subtask,
+[data-density='compact'] .conn-item {
+  padding-block: var(--s1);
+}
+
+[data-density='compact'] .agenda-item {
+  padding-block: calc(var(--s1) / 2);
+}
+
+[data-density='compact'] .col,
+[data-density='compact'] .columns {
+  gap: var(--s5);
+}
+
+[data-density='compact'] .now {
+  padding-block: var(--s6) var(--s5);
+  margin-bottom: var(--s5);
+}
+
+/* ---------- densidade (configuração) ---------- */
+
+.density-options {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  margin-bottom: var(--s2);
+}
+
+.status-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s2);
+  min-width: 0;
 }

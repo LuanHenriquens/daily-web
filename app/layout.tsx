@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { AmbientBackground } from '@/components/AmbientBackground';
 import { ServiceWorker } from '@/components/ServiceWorker';
+import { DENSITY_COOKIE, parseDensity } from '@/lib/density';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -29,9 +31,21 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// Reading the cookie here, rather than stamping the attribute from a client
+// effect, is what keeps a compact layout from rendering comfortable on first
+// paint and snapping a frame later. It costs static rendering for the tree,
+// which this dashboard never had: every screen is authenticated and polled.
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const density = parseDensity((await cookies()).get(DENSITY_COOKIE)?.value);
+
   return (
-    <html lang="pt-BR" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      data-density={density === 'compact' ? 'compact' : undefined}
+      // The client can change density after hydration.
+      suppressHydrationWarning
+    >
       <body>
         <AmbientBackground />
         <ServiceWorker />

@@ -148,9 +148,16 @@ export function DashboardGrid({ layout, panels, onSave }: Props) {
     // Numa tela estreita não há espaço para grade. Os painéis caem numa
     // coluna, na ordem em que estão dispostos.
     const ordenados = [...visible].sort((a, b) => a.y - b.y || a.x - b.x);
+    // O card é o mesmo da grade: sem ele o painel ficaria sem superfície numa
+    // largura estreita, e a tela leria como duas linguagens diferentes.
+    // Aqui a altura vem do conteúdo, então não há corpo com rolagem própria.
     return (
       <div className="col">
-        {ordenados.map((p) => panels.find((painel) => painel.id === p.i)?.node)}
+        {ordenados.map((p) => (
+          <div key={p.i} className="grid-panel grid-panel-flow">
+            {panels.find((painel) => painel.id === p.i)?.node}
+          </div>
+        ))}
       </div>
     );
   }

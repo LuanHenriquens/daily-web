@@ -13,7 +13,7 @@ import { SkeletonRows } from './ui/Skeleton';
 function ItemRow({ item }: { item: PullRequestItem }) {
   return (
     <li className="pull-row">
-      <span className="pull-number mono">#{item.number}</span>
+      <span className="pull-number tabular">#{item.number}</span>
       <a className="pull-title" href={item.url} target="_blank" rel="noreferrer">
         {item.title}
       </a>
@@ -43,7 +43,7 @@ function RepoBlock({ group }: { group: RepoGroup }) {
       {group.issues.length > 0 && (
         <div className="pull-kind">
           <h4 className="pull-kind-label eyebrow">
-            Issues <span className="section-count mono">{group.issues.length}</span>
+            Issues <span className="section-count tabular">{group.issues.length}</span>
           </h4>
           <ul>
             {group.issues.map((item) => (
@@ -56,7 +56,7 @@ function RepoBlock({ group }: { group: RepoGroup }) {
       {group.pulls.length > 0 && (
         <div className="pull-kind">
           <h4 className="pull-kind-label eyebrow">
-            Pull requests <span className="section-count mono">{group.pulls.length}</span>
+            Pull requests <span className="section-count tabular">{group.pulls.length}</span>
           </h4>
           <ul>
             {group.pulls.map((item) => (
