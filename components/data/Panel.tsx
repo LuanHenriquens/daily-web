@@ -38,7 +38,15 @@ interface Props {
  * Padding lives once on the section, never `py` on the root plus `px` per slot.
  * Never nest a Panel around a CardContent — that is how you get double padding.
  */
-export function Panel({ id, title, description, action, compact = false, className, children }: Props) {
+export function Panel({
+  id,
+  title,
+  description,
+  action,
+  compact = false,
+  className,
+  children,
+}: Props) {
   const framed = useContext(FramedContext);
 
   const header = (title || action) && (
@@ -47,11 +55,13 @@ export function Panel({ id, title, description, action, compact = false, classNa
         'flex flex-wrap items-start justify-between gap-x-4 gap-y-2',
         // In a frame the header is the one part that must not move: it stays put
         // while the rows go under it.
-        framed && (compact ? 'shrink-0 px-5 pt-5 pb-3' : 'shrink-0 px-6 pt-6 pb-4'),
+        framed && (compact ? 'shrink-0 px-5 pt-5 pb-2' : 'shrink-0 px-6 pt-6 pb-3'),
       )}
     >
       <div className="grid min-w-0 gap-1">
-        {title && <h3 className={compact ? 'type-caption text-ink-dim' : 'type-subhead'}>{title}</h3>}
+        {title && (
+          <h3 className={compact ? 'type-caption text-ink-dim' : 'type-subhead'}>{title}</h3>
+        )}
         {description && <p className="max-w-prose text-sm text-ink-mid">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -67,7 +77,11 @@ export function Panel({ id, title, description, action, compact = false, classNa
         <div
           className={cn(
             'min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]',
-            compact ? 'px-5 pb-5' : 'px-6 pb-6',
+            // pt-1 is not spacing, it is clearance: the focus ring reaches 4px
+            // past its control, and the first row of this scroller sits flush
+            // against the clipping edge. Without it a focused chip or select on
+            // that first row gets its ring sliced off along the top.
+            compact ? 'px-5 pt-1 pb-5' : 'px-6 pt-1 pb-6',
             !header && (compact ? 'pt-5' : 'pt-6'),
           )}
         >
@@ -80,7 +94,12 @@ export function Panel({ id, title, description, action, compact = false, classNa
   return (
     <section
       id={id}
-      className={cn(cardSurface, 'flex h-full flex-col', compact ? 'gap-3 p-5' : 'gap-5 p-6', className)}
+      className={cn(
+        cardSurface,
+        'flex h-full flex-col',
+        compact ? 'gap-3 p-5' : 'gap-5 p-6',
+        className,
+      )}
     >
       {header}
       {children}

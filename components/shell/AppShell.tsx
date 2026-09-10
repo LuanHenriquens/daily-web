@@ -103,7 +103,7 @@ export function AppShell({ theme, density, sidebar, username, children }: Props)
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex h-dvh gap-3 overflow-hidden p-3">
+      <div className="flex h-dvh gap-2 overflow-hidden p-2">
         <aside
           data-state={collapsed ? 'collapsed' : 'expanded'}
           className={cn(
@@ -281,7 +281,7 @@ export function AppShell({ theme, density, sidebar, username, children }: Props)
           </header>
 
           <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-7xl px-2 pt-6 pb-10 md:px-4">{children}</div>
+            <div className="w-full px-1 pt-3 pb-6 md:px-2">{children}</div>
           </main>
         </div>
 

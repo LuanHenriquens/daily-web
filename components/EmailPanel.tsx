@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Label, Trash } from 'iconoir-react';
 import type { Account, EmailEnvelope, EmailThread, MailboxRef, PanelResult } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
+import { useConfirm } from '@/components/data/ConfirmDialog';
 import type { ActiveFilter } from '@/lib/filters';
 import { matchesQuery, relativeTime } from '@/lib/filters';
 import { groupIntoThreads } from '@/lib/parsers/threads';
@@ -98,6 +99,7 @@ export function EmailPanel({
   onRemoved,
   loading = false,
 }: Props) {
+  const { confirm, dialog } = useConfirm();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [openKey, setOpenKey] = useState<string | null>(null);
   // Conversas abertas na lista. Uma de uma mensagem não expande: abre direto.
@@ -164,7 +166,13 @@ export function EmailPanel({
       alvo.length === 1
         ? 'Excluir este e-mail?'
         : `Excluir esta conversa (${alvo.length} mensagens recebidas)?`;
-    if (!window.confirm(pergunta)) return;
+    const ok = await confirm({
+      title: pergunta,
+      description: 'Os enviados ficam: sua cópia do que escreveu não é lixo da caixa.',
+      confirmLabel: 'Excluir',
+      destructive: true,
+    });
+    if (!ok) return;
 
     const alvos = alvo.map((m) => ({ account: m.account, id: m.id }));
     const chaves = new Set(alvo.map(key));
@@ -531,7 +539,12 @@ export function EmailPanel({
                       {thread.messages.length}
                     </span>
                   )}
-                  <span className={cn('min-w-[3.5ch] shrink-0 text-right type-caption text-ink-dim', tabular)}>
+                  <span
+                    className={cn(
+                      'min-w-[3.5ch] shrink-0 text-right type-caption text-ink-dim',
+                      tabular,
+                    )}
+                  >
                     {relativeTime(thread.lastDate) || EM_DASH}
                   </span>
                   {mailboxes.length > 1 && (
@@ -545,10 +558,7 @@ export function EmailPanel({
                         type="button"
                         // `is-tagged` stays as a behavioural marker: the suite reads
                         // whether a conversation already carries a label off it.
-                        className={cn(
-                          iconButtonClass,
-                          tags.length > 0 && 'is-tagged text-brand',
-                        )}
+                        className={cn(iconButtonClass, tags.length > 0 && 'is-tagged text-brand')}
                         aria-label={`etiquetar ${titulo}`}
                         aria-expanded={tagMenuKey === thread.id}
                         onClick={() => {
@@ -568,7 +578,9 @@ export function EmailPanel({
                             aria-label="etiquetas"
                           >
                             {(tagFolders[thread.messages[0].account] ?? []).length === 0 ? (
-                              <p className="px-3 py-2 text-sm text-ink-dim">Carregando etiquetas…</p>
+                              <p className="px-3 py-2 text-sm text-ink-dim">
+                                Carregando etiquetas…
+                              </p>
                             ) : (
                               (tagFolders[thread.messages[0].account] ?? []).map((f) => (
                                 <button
@@ -672,6 +684,7 @@ export function EmailPanel({
           })}
         </ul>
       )}
+      {dialog}
     </Section>
   );
 }
@@ -805,7 +818,9 @@ function EmailDetail({
             ···
           </button>
           {showQuoted && (
-            <div className={cn(bodyClass, 'border-l-2 border-line pl-3 text-ink-dim')}>{quoted}</div>
+            <div className={cn(bodyClass, 'border-l-2 border-line pl-3 text-ink-dim')}>
+              {quoted}
+            </div>
           )}
         </>
       )}
@@ -826,41 +841,40 @@ function EmailDetail({
           rotas de resposta buscam a mensagem na entrada: o uid de uma enviada
           apontaria para outra coisa lá dentro. */}
       {email.mailbox === 'inbox' && (
-      <div className="flex flex-col gap-2">
-        <Textarea
-          className="min-h-22 resize-y p-3 text-sm leading-relaxed"
-          aria-label="resposta"
-          rows={4}
-          placeholder="Escreva sua resposta — ou descreva o que dizer e peça o rascunho para a IA."
-          value={reply}
-          onChange={(e) => {
-            setReply(e.target.value);
-            setSent(false);
-          }}
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={drafting}
-            onClick={() => void draftWithAi()}
-          >
-            {drafting ? 'Gerando…' : 'Responder com IA'}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={sending || reply.trim().length === 0}
-            onClick={() => void sendReply()}
-          >
-            {sending ? 'Enviando…' : 'Enviar resposta'}
-          </Button>
-          {sent && <span className="text-sm text-ink-mid">Resposta enviada.</span>}
+        <div className="flex flex-col gap-2">
+          <Textarea
+            className="min-h-22 resize-y p-3 text-sm leading-relaxed"
+            aria-label="resposta"
+            rows={4}
+            placeholder="Escreva sua resposta — ou descreva o que dizer e peça o rascunho para a IA."
+            value={reply}
+            onChange={(e) => {
+              setReply(e.target.value);
+              setSent(false);
+            }}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={drafting}
+              onClick={() => void draftWithAi()}
+            >
+              {drafting ? 'Gerando…' : 'Responder com IA'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={sending || reply.trim().length === 0}
+              onClick={() => void sendReply()}
+            >
+              {sending ? 'Enviando…' : 'Enviar resposta'}
+            </Button>
+            {sent && <span className="text-sm text-ink-mid">Resposta enviada.</span>}
+          </div>
         </div>
-      </div>
       )}
-
     </div>
   );
 }

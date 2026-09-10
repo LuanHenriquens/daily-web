@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Trash } from 'iconoir-react';
 import type { Note } from '@/lib/types';
 import { PanelError } from '@/components/data/PanelError';
+import { useConfirm } from '@/components/data/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +20,7 @@ const AUTOSAVE_MS = 700;
 type Estado = 'salvo' | 'salvando' | 'erro';
 
 export function NotesPanel() {
+  const { confirm, dialog } = useConfirm();
   const [notes, setNotes] = useState<Note[]>([]);
   const [ativa, setAtiva] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -144,7 +146,13 @@ export function NotesPanel() {
   };
 
   const apagar = async (note: Note) => {
-    if (!window.confirm(`Apagar a nota "${note.title || 'sem título'}"?`)) return;
+    const ok = await confirm({
+      title: 'Apagar a nota?',
+      description: `"${note.title || 'sem título'}" será removida. Isso não tem volta.`,
+      confirmLabel: 'Apagar',
+      destructive: true,
+    });
+    if (!ok) return;
     if (pendente.current?.id === note.id) {
       pendente.current = null;
       if (timer.current) clearTimeout(timer.current);
@@ -188,11 +196,7 @@ export function NotesPanel() {
         </Button>
       }
     >
-      {erro && (
-        <PanelError>
-          {erro}
-        </PanelError>
-      )}
+      {erro && <PanelError>{erro}</PanelError>}
 
       {!carregando && notes.length === 0 && (
         <EmptyState title="Nenhuma nota ainda." description="Crie a primeira." />
@@ -275,6 +279,7 @@ export function NotesPanel() {
           </div>
         </div>
       )}
+      {dialog}
     </Section>
   );
 }

@@ -11,6 +11,7 @@ import {
   type ModuleId,
 } from '@/lib/modules';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/data/ConfirmDialog';
 import { PanelError } from '@/components/data/PanelError';
 import { Input, inputClass } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,7 +113,9 @@ function Field({
           placeholder={
             // Um segredo já gravado nunca volta para a tela. O placeholder é
             // o que diferencia "está vazio" de "está guardado e não mostro".
-            alreadySet && spec.secret ? '•••••••• (guardado — deixe em branco para manter)' : spec.placeholder
+            alreadySet && spec.secret
+              ? '•••••••• (guardado — deixe em branco para manter)'
+              : spec.placeholder
           }
           onChange={(e) => onChange(e.target.value)}
           autoComplete={spec.secret ? 'new-password' : 'off'}
@@ -125,6 +128,7 @@ function Field({
 }
 
 export function IntegrationsPanel() {
+  const { confirm, dialog } = useConfirm();
   const [payload, setPayload] = useState<Payload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
@@ -132,7 +136,9 @@ export function IntegrationsPanel() {
   const [label, setLabel] = useState('');
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [testResult, setTestResult] = useState<Record<string, { ok: boolean; message: string }>>(
+    {},
+  );
   const [openHelp, setOpenHelp] = useState<ModuleId | null>(null);
   const [flash, setFlash] = useState<{ ok: boolean; message: string } | null>(null);
   const [calendars, setCalendars] = useState<Record<string, CalendarRef[]>>({});
@@ -170,9 +176,10 @@ export function IntegrationsPanel() {
       setCalendars((prev) => ({ ...prev, [connId]: data.calendars }));
       setChosenCalendars((prev) => ({
         ...prev,
-        [connId]: data.selected.length > 0
-          ? data.selected
-          : data.calendars.filter((c: CalendarRef) => c.primary).map((c: CalendarRef) => c.id),
+        [connId]:
+          data.selected.length > 0
+            ? data.selected
+            : data.calendars.filter((c: CalendarRef) => c.primary).map((c: CalendarRef) => c.id),
       }));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -243,12 +250,15 @@ export function IntegrationsPanel() {
   };
 
   const remove = async (conn: ConnectionSummary) => {
-    if (!window.confirm(`Remover "${conn.label}"? A credencial é apagada.`)) return;
+    const ok = await confirm({
+      title: 'Remover a conexão?',
+      description: `A credencial de "${conn.label}" é apagada junto e precisa ser cadastrada de novo.`,
+      confirmLabel: 'Remover',
+      destructive: true,
+    });
+    if (!ok) return;
     try {
-      const data = await send(
-        `/api/integrations/${conn.module}/connections/${conn.id}`,
-        'DELETE',
-      );
+      const data = await send(`/api/integrations/${conn.module}/connections/${conn.id}`, 'DELETE');
       setPayload((prev) => (prev ? { ...prev, modules: data.modules } : prev));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -291,9 +301,7 @@ export function IntegrationsPanel() {
     return (
       <Section eyebrow="Integrações">
         {error ? (
-          <PanelError>
-            {error}
-          </PanelError>
+          <PanelError>{error}</PanelError>
         ) : (
           <p className="type-caption py-6 text-ink-dim">Carregando…</p>
         )}
@@ -309,17 +317,20 @@ export function IntegrationsPanel() {
           guardada. Gere com <code className="font-mono text-ink">openssl rand -base64 32</code>.
         </PanelError>
       )}
-      {error && (
-        <PanelError>
-          {error}
-        </PanelError>
-      )}
+      {error && <PanelError>{error}</PanelError>}
       {flash && (
-        <p role="status" className={cn(
+        <p
+          role="status"
+          className={cn(
             'type-caption flex basis-full items-center gap-2',
             flash.ok ? 'text-success' : 'text-danger',
-          )}>
-          {flash.ok ? <CheckCircle width={14} height={14} /> : <WarningCircle width={14} height={14} />}
+          )}
+        >
+          {flash.ok ? (
+            <CheckCircle width={14} height={14} />
+          ) : (
+            <WarningCircle width={14} height={14} />
+          )}
           {flash.message}
         </p>
       )}
@@ -494,10 +505,13 @@ export function IntegrationsPanel() {
                         </fieldset>
                       )}
                       {result && (
-                        <p className={cn(
+                        <p
+                          className={cn(
                             'type-caption flex basis-full items-center gap-2',
                             result.ok ? 'text-success' : 'text-danger',
-                          )} role="status">
+                          )}
+                          role="status"
+                        >
                           {result.ok ? (
                             <CheckCircle width={14} height={14} />
                           ) : (
@@ -598,6 +612,7 @@ export function IntegrationsPanel() {
           </article>
         );
       })}
+      {dialog}
     </Section>
   );
 }

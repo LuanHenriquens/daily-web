@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Trash } from 'iconoir-react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/data/ConfirmDialog';
 import { PanelError } from '@/components/data/PanelError';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ interface PublicUser {
 }
 
 export function UsersPanel() {
+  const { confirm, dialog } = useConfirm();
   const [users, setUsers] = useState<PublicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,8 +78,16 @@ export function UsersPanel() {
   };
 
   const remove = async (user: PublicUser) => {
-    if (!window.confirm(`Remover ${user.username}?`)) return;
-    const res = await fetch(`/api/users/${encodeURIComponent(user.username)}`, { method: 'DELETE' });
+    const ok = await confirm({
+      title: 'Remover o usuário?',
+      description: `${user.username} perde o acesso imediatamente.`,
+      confirmLabel: 'Remover',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/users/${encodeURIComponent(user.username)}`, {
+      method: 'DELETE',
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setError(data.error ?? 'Falha ao remover');
@@ -113,11 +123,7 @@ export function UsersPanel() {
 
   return (
     <Section eyebrow="Usuários" count={users.length > 0 ? String(users.length) : undefined}>
-      {error && (
-        <PanelError>
-          {error}
-        </PanelError>
-      )}
+      {error && <PanelError>{error}</PanelError>}
 
       <div className="flex flex-wrap items-center gap-2">
         <Input
@@ -136,10 +142,7 @@ export function UsersPanel() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Label className="text-ink-mid">
-          <Checkbox
-            checked={isAdmin}
-            onCheckedChange={(checked) => setIsAdmin(checked === true)}
-          />
+          <Checkbox checked={isAdmin} onCheckedChange={(checked) => setIsAdmin(checked === true)} />
           admin
         </Label>
         <Button
@@ -217,6 +220,7 @@ export function UsersPanel() {
           ))}
         </ul>
       )}
+      {dialog}
     </Section>
   );
 }

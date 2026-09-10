@@ -40,12 +40,25 @@ Only `main` is maintained; there are no release branches.
   no wrong-theme flash on first paint.
 - A display density setting beside it, comfortable or compact, changing vertical
   rhythm only: a dense screen needs more visible lines, not smaller type.
+- Screens use the full width of the display. The content column was capped at
+  1280px, which on a wide monitor was empty margin on both sides of a panel
+  that is dense on purpose. Frame padding and vertical rhythm tighten with it.
 - The sidebar collapses to a 56px icon rail on Cmd+B or from its own control,
   which gives a vertical monitor back 184px of width. The choice rides a cookie
   the server reads during render, so a collapsed rail never expands for a frame
   on reload, and each item keeps its label in a tooltip and for screen readers.
 
 ### Fixed
+- Deleting anything asks in an app dialog instead of the browser's own. The
+  native one cannot be styled, cannot be reached from the keyboard beyond its
+  two buttons, blocks the whole tab, and on some platforms is suppressed
+  outright — a destructive action that silently never asks is worse than one
+  that asks badly. Escape cancels, Enter confirms, focus lands on the confirm
+  button, and cancel comes first so the destructive button is never the one a
+  hand lands on by habit.
+- A focused control on a panel's first row no longer has its ring sliced off.
+  The ring reaches 4px past its control and that row sat flush against the
+  scroll container's clipping edge.
 - A panel's frame no longer scrolls away with its rows. The card sat inside the
   scroll container, so scrolling a long list carried the border and the rounded
   corners off the top and the module stopped reading as a box. The card is now
