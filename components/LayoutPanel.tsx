@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { PanelError } from '@/components/data/PanelError';
 import { Section } from './ui/Section';
 
 /**
@@ -55,28 +57,30 @@ export function LayoutPanel() {
 
   return (
     <Section eyebrow="Disposição dos painéis">
-      <p className="conn-intro">
+      <p className="max-w-[60ch] text-sm text-ink-mid">
         No painel, clique em <strong>Organizar</strong> para mover os painéis arrastando e
         redimensioná-los pelo canto. Clique em <strong>Concluir</strong> quando terminar.
       </p>
 
       {erro && (
-        <p role="alert" className="panel-error">
+        <PanelError>
           {erro}
-        </p>
+        </PanelError>
       )}
 
-      {padrao === true && <p className="empty">Os painéis estão na disposição padrão.</p>}
+      {padrao === true && <p className="type-caption py-6 text-ink-dim">Os painéis estão na disposição padrão.</p>}
 
       {padrao === false && (
-        <button
+        <Button
           type="button"
-          className="btn"
+          variant="outline"
+          size="sm"
+          className="w-fit"
           disabled={restaurando}
           onClick={() => void restaurar()}
         >
           {restaurando ? 'Restaurando…' : 'Restaurar disposição padrão'}
-        </button>
+        </Button>
       )}
     </Section>
   );

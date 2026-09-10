@@ -8,7 +8,44 @@ Only `main` is maintained; there are no release branches.
 
 ## [Unreleased]
 
+### Changed
+- The front end is rebuilt on Tailwind v4 and shadcn/ui. The hand-written
+  stylesheet is gone, replaced by a token layer in `oklch()`: a six-level
+  surface ramp, five elevations that each open with a large inset highlight,
+  fixed signal colours independent of the accent, and an iridescent mesh the
+  whole page floats on. Panels, dialogs and popovers are translucent surfaces;
+  buttons, chips and status pills are round; containers follow a radius ladder.
+- Type is seven roles, each carrying family, size, leading, weight and tracking
+  together, so a size is never chosen alone at a call site. Every stray size
+  below the 13px caption floor was routed to the role it wanted, uppercase
+  micro-labels with wide tracking are gone, and numbers use the text face with
+  tabular figures rather than the mono face.
+- Status is never hue alone: each state carries a glyph and a label beside the
+  colour, so the reading survives a grayscale print. No status follows the
+  accent, since a status that did would change colour when the accent changed
+  with nothing about the status having changed.
+- The screens gain an app shell: a recessed sidebar whose active item is a band
+  with a 3px bar rather than a pill, a command palette on Cmd+K over routes and
+  settings, and an account block. The frame is pinned to the viewport, so the
+  mesh stays still while only the content column scrolls.
+- The hour-driven ambient background is removed along with its module and test.
+  The system paints a fixed mesh instead, on the ground that the accent stays
+  the colour of action while the background is atmosphere.
+
+### Added
+- Theme is three states — system, light and dark — where system is the absence
+  of both a class and a cookie. Both legs of the dark palette are written out,
+  so an explicit light choice wins on a dark machine and an explicit dark choice
+  wins on a light one. The choice is stamped during server render, so there is
+  no wrong-theme flash on first paint.
+- A display density setting beside it, comfortable or compact, changing vertical
+  rhythm only: a dense screen needs more visible lines, not smaller type.
+
 ### Fixed
+- `.gitignore` anchors its SQLite pattern to `/data/`. Unanchored, `data/`
+  matched any directory of that name at any depth, which silently kept
+  `components/data/` out of both git and the CSS content scan — its utilities
+  never reached the stylesheet and its files were in no commit.
 - The systemd unit restarts on any exit, not only on failure. An external
   SIGTERM exits cleanly, and a clean exit is not a failure, so the service
   stayed down until somebody noticed rather than coming back on its own. A

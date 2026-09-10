@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { PomodoroPhase, PomodoroState } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { tabular } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 
 interface Props {
   pomodoro: PomodoroState | null;
@@ -91,24 +94,24 @@ export function Pomodoro({ pomodoro, onChanged }: Props) {
   const progress = total > 0 ? 1 - remaining / total : 0;
 
   return (
-    <div className="now-pomodoro" data-testid="pomodoro">
-      <div className="now-pomo-meter" aria-hidden="true">
+    <div className="flex flex-col gap-2 pb-2" data-testid="pomodoro">
+      <div className="h-0.5 w-42 overflow-hidden rounded-full bg-muted" aria-hidden="true">
         <span
-          className={`now-pomo-fill${isFocus ? ' is-focus' : ' is-rest'}`}
+          className="block h-full w-full origin-left bg-brand transition-transform duration-150 ease-linear motion-reduce:transition-none"
           style={{ transform: `scaleX(${Math.min(Math.max(progress, 0), 1)})` }}
         />
       </div>
-      <div className="now-pomo-info">
-        <span className="now-pomo-phase">{isFocus ? 'foco' : 'descanso'}</span>
-        <span className="now-pomo-time mono">{formatRemaining(remaining)}</span>
-        <span className="now-pomo-count mono" title="focos concluídos">
+      <div className="flex items-baseline gap-3">
+        <span className="type-caption text-ink-dim">{isFocus ? 'foco' : 'descanso'}</span>
+        <span className={cn('type-subhead text-ink', tabular)}>{formatRemaining(remaining)}</span>
+        <span className={cn('type-caption text-ink-dim', tabular)} title="focos concluídos">
           {pomodoro.completedFocusCount} focos
         </span>
       </div>
-      <div className="now-pomo-actions">
-        <button
+      <div className="flex gap-2">
+        <Button
           type="button"
-          className="btn"
+          size="sm"
           aria-label={pomodoro.running ? 'pausar foco' : 'iniciar foco'}
           onClick={() =>
             void post(
@@ -118,18 +121,19 @@ export function Pomodoro({ pomodoro, onChanged }: Props) {
           }
         >
           {pomodoro.running ? 'Pausar' : 'Iniciar'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn btn-ghost"
+          variant="ghost"
+          size="sm"
           aria-label="zerar pomodoro"
           onClick={() => void post('/api/pomodoro/reset', 'Falha ao zerar pomodoro')}
         >
           Zerar
-        </button>
+        </Button>
       </div>
       {error && (
-        <span role="alert" className="now-pomo-error">
+        <span role="alert" className="type-caption text-danger">
           {error}
         </span>
       )}
