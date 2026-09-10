@@ -8,6 +8,13 @@ Only `main` is maintained; there are no release branches.
 
 ## [Unreleased]
 
+### Fixed
+- The systemd unit restarts on any exit, not only on failure. An external
+  SIGTERM exits cleanly, and a clean exit is not a failure, so the service
+  stayed down until somebody noticed rather than coming back on its own. A
+  deliberate `systemctl stop` still stops it for good, and the
+  `systemctl restart` in `deploy/publish.sh` is unaffected.
+
 ### Added
 - A third tab, **Aprovados**, listing what you approved. There is no JQL
   function for it: `myApproved()` and `myDecided()` do not exist,
